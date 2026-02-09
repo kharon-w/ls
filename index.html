@@ -1323,7 +1323,8 @@ const addChars = collectExistAddChars();
 
 if (addChars.length){
   const crow = root.querySelector(".crow-info") || root.querySelector(".character .crow-info");
-  const tipsBox = root.querySelector(".ls-twnk");
+const tipsBox = crow ? crow.querySelector(".ls-twnk") : null;
+  const tipsBox = crow.querySelector(".ls-twnk");
   if (crow && tipsBox){
     // 1) найдём максимальный индекс существующих персонажей
     const existingContents = $$(".char-content", root)
