@@ -954,26 +954,31 @@ function collectExistAddChars(){
       });
   }
 
-  function refreshExistingCharUI(){
-    if (!a.exCharSelect || !a.exCharCount) return;
+ function refreshExistingCharUI(){
+  if (!a.exCharSelect || !a.exCharCount) return;
 
-    a.exCharSelect.innerHTML = "";
-    exChars.forEach(c => {
-      const opt = document.createElement("option");
-      opt.value = String(c.idx);
-      const title = (c.nameRu || "Имя Фамилия") + (c.nameEn ? ` · ${c.nameEn}` : "");
-      opt.textContent = `Персонаж ${c.idx}: ${title}`;
-      a.exCharSelect.appendChild(opt);
-    });
+  // сохраняем выбор ДО очистки
+  const prev = String(a.exCharSelect.value || "");
 
-    a.exCharCount.value = String(exChars.length);
+  a.exCharSelect.innerHTML = "";
+  exChars.forEach(c => {
+    const opt = document.createElement("option");
+    opt.value = String(c.idx);
+    const title = (c.nameRu || "Имя Фамилия") + (c.nameEn ? ` · ${c.nameEn}` : "");
+    opt.textContent = `Персонаж ${c.idx}: ${title}`;
+    a.exCharSelect.appendChild(opt);
+  });
 
-    const cur = a.exCharSelect.value || (exChars[0]?.idx ? String(exChars[0].idx) : "1");
-    a.exCharSelect.value = cur;
+  a.exCharCount.value = String(exChars.length);
 
-    const meta = exChars.find(x => String(x.idx) === String(cur));
-    if (a.exCharHint) a.exCharHint.textContent = meta ? `Ссылка: ${meta.link || "—"}` : "";
-  }
+  // восстанавливаем выбор, если он ещё существует
+  const hasPrev = exChars.some(x => String(x.idx) === prev);
+  const cur = hasPrev ? prev : (exChars[0]?.idx ? String(exChars[0].idx) : "1");
+  a.exCharSelect.value = cur;
+
+  const meta = exChars.find(x => String(x.idx) === String(cur));
+  if (a.exCharHint) a.exCharHint.textContent = meta ? `Ссылка: ${meta.link || "—"}` : "";
+}
 
   
   function makeImgOnlyRow(container, title){
