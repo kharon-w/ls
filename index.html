@@ -1338,7 +1338,8 @@ if (addChars.length){
     const lastRadio = crow.querySelector('input.char-tab-input:last-of-type');
     // если :last-of-type не сработал — найдём руками
     const radios = crow.querySelectorAll("input.char-tab-input");
-    const lastR = radios.length ? radios[radios.length - 1] : null;
+let lastR = radios.length ? radios[radios.length - 1] : null;
+
 
     addChars.forEach(c => {
       const idx = next++;
@@ -1351,13 +1352,17 @@ if (addChars.length){
       radio.className = "char-tab-input";
 
       // вставляем сразу после последнего radio 
-      if (lastR && lastR.parentNode){
-        lastR.insertAdjacentElement("afterend", radio);
-      } else if (lastRadio && lastRadio.parentNode){
-        lastRadio.insertAdjacentElement("afterend", radio);
-      } else {
-        crow.appendChild(radio);
-      }
+     if (lastR && lastR.parentNode){
+  lastR.insertAdjacentElement("afterend", radio);
+  lastR = radio;
+} else if (lastRadio && lastRadio.parentNode){
+  lastRadio.insertAdjacentElement("afterend", radio);
+  lastR = radio;
+} else {
+  crow.appendChild(radio);
+  lastR = radio;
+}
+
 
       // --- tip label
       const label = doc.createElement("label");
@@ -1401,7 +1406,7 @@ ${chrono ? "            " + chrono.replace(/\n/g,"\n            ") : ""}
       `.trim();
 
      
-      const lastContent = root.querySelector('.char-content:last-of-type');
+      const lastContent = crow.querySelector('.char-content:last-of-type');
       if (lastContent && lastContent.parentNode){
         lastContent.insertAdjacentElement("afterend", content);
       } else {
