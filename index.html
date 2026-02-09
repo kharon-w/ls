@@ -1323,8 +1323,8 @@ const addChars = collectExistAddChars();
 
 if (addChars.length){
   const crow = root.querySelector(".crow-info") || root.querySelector(".character .crow-info");
-const tipsBox = crow ? crow.querySelector(".ls-twnk") : null;
-  const tipsBox = crow.querySelector(".ls-twnk");
+  const tipsBox = crow ? crow.querySelector(".ls-twnk") : null;
+
   if (crow && tipsBox){
     // 1) найдём максимальный индекс существующих персонажей
     const existingContents = $$(".char-content", root)
@@ -1335,48 +1335,36 @@ const tipsBox = crow ? crow.querySelector(".ls-twnk") : null;
     const maxIdx = existingContents.length ? Math.max(...existingContents) : 0;
     let next = maxIdx + 1;
 
-    // 2) куда вставлять radios: после последнего input.char-tab-input
-    const lastRadio = crow.querySelector('input.char-tab-input:last-of-type');
-    // если :last-of-type не сработал — найдём руками
+    // 2) последний radio
     const radios = crow.querySelectorAll("input.char-tab-input");
-let lastR = radios.length ? radios[radios.length - 1] : null;
-
+    let lastR = radios.length ? radios[radios.length - 1] : null;
 
     addChars.forEach(c => {
       const idx = next++;
 
-      // --- radio
       const radio = doc.createElement("input");
       radio.type = "radio";
       radio.name = "char-tabs";
       radio.id = `char-tab-${idx}`;
       radio.className = "char-tab-input";
 
-      // вставляем сразу после последнего radio 
-     if (lastR && lastR.parentNode){
-  lastR.insertAdjacentElement("afterend", radio);
-  lastR = radio;
-} else if (lastRadio && lastRadio.parentNode){
-  lastRadio.insertAdjacentElement("afterend", radio);
-  lastR = radio;
-} else {
-  crow.appendChild(radio);
-  lastR = radio;
-}
+      if (lastR && lastR.parentNode){
+        lastR.insertAdjacentElement("afterend", radio);
+        lastR = radio;
+      } else {
+        crow.appendChild(radio);
+        lastR = radio;
+      }
 
-
-      // --- tip label
       const label = doc.createElement("label");
       label.className = "char-tip";
       label.setAttribute("for", `char-tab-${idx}`);
 
       const av = esc(c.av || DEFAULT_ICON);
       const en = esc(c.en || "Name Surname");
-
       label.innerHTML = `<img src="${av}" style="border-radius:4px;"><span>${en}</span>`;
       tipsBox.appendChild(label);
 
-      // --- content block
       const content = doc.createElement("div");
       content.className = `char-content char-content-${idx}`;
 
@@ -1406,8 +1394,9 @@ ${chrono ? "            " + chrono.replace(/\n/g,"\n            ") : ""}
         </div>
       `.trim();
 
-     
-      const lastContent = crow.querySelector('.char-content:last-of-type');
+      const allContents = crow.querySelectorAll(".char-content");
+      const lastContent = allContents.length ? allContents[allContents.length - 1] : null;
+
       if (lastContent && lastContent.parentNode){
         lastContent.insertAdjacentElement("afterend", content);
       } else {
@@ -1415,7 +1404,6 @@ ${chrono ? "            " + chrono.replace(/\n/g,"\n            ") : ""}
       }
     });
 
-   
     exChars = getCharMetaFromDoc(doc);
     refreshExistingCharUI();
   }
