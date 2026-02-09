@@ -370,14 +370,21 @@ select option{background:var(--panel);color:var(--ink)}
   const tabAdmins  = $("tabAdmins");
   const boxPlayers = $("boxPlayers");
   const boxAdmins  = $("boxAdmins");
+  const cardPlayersOut = $("cardPlayersOut");
+const cardAdminsOut  = $("cardAdminsOut");
 
-  function setMainTab(which){
-    if (tabPlayers) tabPlayers.setAttribute("aria-pressed", String(which === "players"));
-    if (tabAdmins)  tabAdmins.setAttribute("aria-pressed", String(which === "admins"));
-    if (boxPlayers) boxPlayers.classList.toggle("hidden", which !== "players");
-    if (boxAdmins)  boxAdmins.classList.toggle("hidden", which !== "admins");
-    renderAll();
-  }
+
+ function setMainTab(which){
+  if (tabPlayers) tabPlayers.setAttribute("aria-pressed", String(which === "players"));
+  if (tabAdmins)  tabAdmins.setAttribute("aria-pressed", String(which === "admins"));
+  if (boxPlayers) boxPlayers.classList.toggle("hidden", which !== "players");
+  if (boxAdmins)  boxAdmins.classList.toggle("hidden", which !== "admins");
+
+  if (cardPlayersOut) cardPlayersOut.classList.toggle("hidden", which !== "players");
+  if (cardAdminsOut)  cardAdminsOut.classList.toggle("hidden", which !== "admins");
+
+  renderAll();
+}
   on(tabPlayers, "click", () => setMainTab("players"));
   on(tabAdmins,  "click", () => setMainTab("admins"));
 
