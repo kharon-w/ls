@@ -1417,38 +1417,54 @@ ${chrono ? "            " + chrono.replace(/\n/g,"\n            ") : ""}
 
     const selectedIdx = Number(a.exCharSelect?.value || exChars[0]?.idx || 1);
 
-    // фон ЛС текущий — заменить
-    const bgLSCur = val(a.bgLSCurrent);
-    if (bgLSCur){
-      const fon1 = root.querySelector(".crow-info img.fon");
-      if (fon1) fon1.setAttribute("src", bgLSCur);
+ // фон ЛС текущий — заменить
+const bgLSCur = val(a.bgLSCurrent);
+if (bgLSCur){
+  const fon1 = root.querySelector(".crow-info img.fon");
+  if (fon1) fon1.setAttribute("src", bgLSCur);
 
-      
-      const fon2 = root.querySelector(".lsfn-block img.fon") || root.querySelector(".lsfn-block img");
-      if (fon2) fon2.setAttribute("src", bgLSCur);
+  const wrapLs = root.querySelector(".lsfn-block wrap");
+  if (wrapLs){
+    const first = wrapLs.querySelector("img");
+    const old = (first?.getAttribute("src") || "").trim();
+
+    if (first) first.setAttribute("src", bgLSCur);
+
+    if (old && old !== bgLSCur){
+      const hasOld = Array.from(wrapLs.querySelectorAll("img"))
+        .some(img => (img.getAttribute("src") || "").trim() === old);
+      if (!hasOld){
+        const img = doc.createElement("img");
+        img.className = "fon";
+        img.setAttribute("src", old);
+        wrapLs.appendChild(doc.createTextNode("\n"));
+        wrapLs.appendChild(img);
+      }
     }
+  }
+}
 
    
    const lsBgs = collectImgs(a.lsBgList);
 if (lsBgs.length){
   const wrap = root.querySelector(".lsfn-block wrap");
   if (wrap){
-    const existing = Array.from(wrap.querySelectorAll("img"))
-      .map(img => (img.getAttribute("src") || "").trim())
-      .filter(Boolean);
+    const existing = new Set(
+      Array.from(wrap.querySelectorAll("img"))
+        .map(img => (img.getAttribute("src") || "").trim())
+        .filter(Boolean)
+    );
 
-    const merged = existing.concat(lsBgs.map(s => String(s).trim()).filter(Boolean));
-
-    const seen = new Set();
-    const uniq = [];
-    merged.forEach(u => {
-      if (!seen.has(u)){
-        seen.add(u);
-        uniq.push(u);
-      }
+    lsBgs.forEach(u => {
+      const url = String(u || "").trim();
+      if (!url || existing.has(url)) return;
+      existing.add(url);
+      const img = doc.createElement("img");
+      img.className = "fon";
+      img.setAttribute("src", url);
+      wrap.appendChild(doc.createTextNode("\n"));
+      wrap.appendChild(img);
     });
-
-    wrap.innerHTML = uniq.map(u => `<img class="fon" src="${esc(u)}">`).join("\n");
   }
 }
 
