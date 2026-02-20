@@ -1429,13 +1429,28 @@ ${chrono ? "            " + chrono.replace(/\n/g,"\n            ") : ""}
     }
 
    
-    const lsBgs = collectImgs(a.lsBgList);
-    if (lsBgs.length){
-      const wrap = root.querySelector(".lsfn-block wrap");
-      if (wrap){
-        wrap.innerHTML = lsBgs.map(u => `<img class="fon" src="${esc(u)}">`).join("\n");
+   const lsBgs = collectImgs(a.lsBgList);
+if (lsBgs.length){
+  const wrap = root.querySelector(".lsfn-block wrap");
+  if (wrap){
+    const existing = Array.from(wrap.querySelectorAll("img"))
+      .map(img => (img.getAttribute("src") || "").trim())
+      .filter(Boolean);
+
+    const merged = existing.concat(lsBgs.map(s => String(s).trim()).filter(Boolean));
+
+    const seen = new Set();
+    const uniq = [];
+    merged.forEach(u => {
+      if (!seen.has(u)){
+        seen.add(u);
+        uniq.push(u);
       }
-    }
+    });
+
+    wrap.innerHTML = uniq.map(u => `<img class="fon" src="${esc(u)}">`).join("\n");
+  }
+}
 
     // коллекция фонов профиля: НЕ заменяем дефолт, только ДОБАВЛЯЕМ новые в wrap
     const profBgs = collectImgs(a.profBgList);
