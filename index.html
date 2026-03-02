@@ -1568,24 +1568,37 @@ if (collWrap){
     collWrap.insertAdjacentHTML("beforeend", "\n" + html);
   }
 }
-    // эпизоды: применяем к выбранному персонажу
-    const charNode = root.querySelector(`.char-content-${selectedIdx}`) || root.querySelector(".char-content");
-    if (charNode){
-      const ls = charNode.querySelector(".eps-ls ls") || charNode.querySelector("ls");
-      if (ls){
-        const m = String(a.epsMain?.value ?? "").trim();
-        const s = String(a.epsSNS?.value ?? "").trim();
-        const a_ = String(a.epsAlt?.value ?? "").trim();
+    // эпизоды: применяем к выбранному персонажу 
+const charNode = root.querySelector(`.char-content-${selectedIdx}`) || root.querySelector(".char-content");
+if (charNode){
+  const ls = charNode.querySelector(".eps-ls ls") || charNode.querySelector("ls");
+  if (ls){
+    const m  = String(a.epsMain?.value ?? "").trim();
+    const s  = String(a.epsSNS?.value ?? "").trim();
+    const a_ = String(a.epsAlt?.value ?? "").trim();
 
-        const parts = [];
-        if (m) parts.push(`<div class="ep-altn">Основная игра</div>\n${m}`);
-        if (s) parts.push(`<div class="ep-altn">СНС эпизоды</div>\n${s}`);
-        if (a_) parts.push(`<div class="ep-altn">Альтернатива</div>\n${a_}`);
+    const parts = [];
+    if (m)  parts.push(`<div class="ep-altn">Основная игра</div>\n${m}`);
+    if (s)  parts.push(`<div class="ep-altn">СНС эпизоды</div>\n${s}`);
+    if (a_) parts.push(`<div class="ep-altn">Альтернатива</div>\n${a_}`);
 
-        if (parts.length) ls.innerHTML = parts.join("\n\n");
-      }
+ 
+    const oldGen = ls.querySelector('.ls-gen-eps[data-gen="1"]');
+    if (oldGen) oldGen.remove();
+
+   
+    if (parts.length){
+      const gen = doc.createElement("div");
+      gen.className = "ls-gen-eps";
+      gen.setAttribute("data-gen", "1");
+      gen.innerHTML = parts.join("\n\n");
+
+      ls.appendChild(doc.createTextNode("\n"));
+      ls.appendChild(gen);
+      ls.appendChild(doc.createTextNode("\n"));
     }
-
+  }
+}
     return root.innerHTML.trim();
   }
 
