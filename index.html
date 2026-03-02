@@ -1532,30 +1532,42 @@ if (lsBgs.length){
       });
     }
 
-    // ачивки
-    const achWrap = root.querySelector(".th-block wrap");
-    const achItems = collectTipItems(a.achList);
-    if (achWrap){
-      achWrap.innerHTML = "";
-      achItems.forEach(x => {
-        const img = x.img || "https://forumstatic.ru/files/001c/a3/e7/92654.png";
-        const txt = x.txt || "Текст";
-        achWrap.insertAdjacentHTML("beforeend", `<div class="char-tip"><img src="${esc(img)}"><span>${esc(txt)}</span></div>`);
-      });
-    }
+   // ачивки
+const achWrap = root.querySelector(".th-block wrap");
+const achItems = collectTipItems(a.achList);
 
-    // коллекция
-    const collWrap = root.querySelector(".th2-block wrap");
-    const collItems = collectTipItems(a.collList);
-    if (collWrap){
-      collWrap.innerHTML = "";
-      collItems.forEach(x => {
-        const img = x.img || DEFAULT_ICON;
-        const txt = x.txt || "Текст";
-        collWrap.insertAdjacentHTML("beforeend", `<div class="char-tip"><img src="${esc(img)}"><span>${esc(txt)}</span></div>`);
-      });
-    }
+if (achWrap){
+  
+  $$('.char-tip[data-gen="1"]', achWrap).forEach(n => n.remove());
 
+  if (achItems.length){
+    const html = achItems.map(x => {
+      const img = x.img || "https://forumstatic.ru/files/001c/a3/e7/92654.png";
+      const txt = x.txt || "Текст";
+      return `<div class="char-tip" data-gen="1"><img src="${esc(img)}"><span>${esc(txt)}</span></div>`;
+    }).join("\n");
+
+    achWrap.insertAdjacentHTML("beforeend", "\n" + html);
+  }
+}
+
+   // коллекция
+const collWrap = root.querySelector(".th2-block wrap");
+const collItems = collectTipItems(a.collList);
+
+if (collWrap){
+  $$('.char-tip[data-gen="1"]', collWrap).forEach(n => n.remove());
+
+  if (collItems.length){
+    const html = collItems.map(x => {
+      const img = x.img || DEFAULT_ICON;
+      const txt = x.txt || "Текст";
+      return `<div class="char-tip" data-gen="1"><img src="${esc(img)}"><span>${esc(txt)}</span></div>`;
+    }).join("\n");
+
+    collWrap.insertAdjacentHTML("beforeend", "\n" + html);
+  }
+}
     // эпизоды: применяем к выбранному персонажу
     const charNode = root.querySelector(`.char-content-${selectedIdx}`) || root.querySelector(".char-content");
     if (charNode){
