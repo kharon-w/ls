@@ -1104,9 +1104,24 @@ on(a.exBtnAddNewChar, "click", () => {
     "КУПОН НА ИКОНКУ В ПОДАРОК",
     "КУПОН НА АВАТАР ОТ АМС",
     "КУПОН НА ПРОПУСК ДНЯ В ДЕЙЛИКАХ",
-    "КУПОН НА ЛИМИТ НАБОР",
+    "КУПОН НА ЛИМИТНЫЙ НАБОР",
+    "КУПОН НА БАН",
   ];
   const couponState = new Map(); // name -> {on,count}
+
+  const couponImgByName = {
+  "КУПОН НА ТВИНКА": "https://upforme.ru/uploads/001c/a1/8d/26/714012.png",
+  "КУПОН НА ЗАЩИТУ ОТ ЧИСТКИ": "https://upforme.ru/uploads/001c/a1/8d/26/246859.png",
+  "КУПОН НА ЛИМИТНЫЙ НАБОР": "https://upforme.ru/uploads/001c/a1/8d/26/51385.png",
+  "КУПОН НА ФОН ПРОФИЛЯ ИЛИ ЛС": "https://upforme.ru/uploads/001c/a1/8d/26/596051.png",
+  "КУПОН НА ПЛАШКУ": "https://upforme.ru/uploads/001c/a1/8d/26/459775.png",
+  "КУПОН НА ИКОНКУ В ПОДАРОК": "https://upforme.ru/uploads/001c/a1/8d/26/639482.png",
+  "КУПОН НА АВАТАР ОТ АМС": "https://upforme.ru/uploads/001c/a1/8d/26/489312.png",
+  "КУПОН НА ПРОПУСК ДНЯ В ДЕЙЛИКАХ": "https://upforme.ru/uploads/001c/a1/8d/26/836868.png",
+  "КУПОН НА БАН": "https://upforme.ru/uploads/001c/a1/8d/26/53527.png",
+  "КУПОН НА НАБОР": "https://upforme.ru/uploads/001c/a1/8d/26/809895.png",
+  // новые купоны сюда
+};
 
   function buildCouponsUI(){
     if (!a.couponToggles) return;
@@ -1221,7 +1236,8 @@ const NEW_LS_STATIC_TAIL = `
           <div class="char-tip"><img class="nema" src="https://upforme.ru/uploads/001c/a1/8d/26/639482.png"><span>КУПОН НА ИКОНКУ В ПОДАРОК: 0 шт</span></div>
           <div class="char-tip"><img class="nema" src="https://upforme.ru/uploads/001c/a1/8d/26/489312.png"><span>КУПОН НА АВАТАР ОТ АМС: 0 шт</span></div>
           <div class="char-tip"><img class="nema" src="https://upforme.ru/uploads/001c/a1/8d/26/836868.png"><span>КУПОН НА ПРОПУСК ДНЯ В ДЕЙЛИКАХ: 0 шт</span></div>
-          <div class="char-tip"><img class="nema" src="https://upforme.ru/uploads/001c/a1/8d/26/51385.png"><span>КУПОН НА ЛИМИТ НАБОР: 0 шт</span></div>
+          <div class="char-tip"><img class="nema" src="https://upforme.ru/uploads/001c/a1/8d/26/51385.png"><span>КУПОН НА ЛИМИТНЫЙ НАБОР: 0 шт</span></div>
+          <div class="char-tip"><img class="nema" src="https://upforme.ru/uploads/001c/a1/8d/26/53527.png"><span>КУПОН НА БАН: 0 шт</span></div>
         </wrap>
       </div>
     </div>
@@ -1511,27 +1527,53 @@ if (lsBgs.length){
       }
     }
 
-    // купоны: если включили — снимаем nema и ставим количество
-    const couponWrap = root.querySelector(".th3-block wrap");
-    if (couponWrap){
-      const tips = Array.from(couponWrap.querySelectorAll(".char-tip"));
-      tips.forEach(t => {
-        const span = t.querySelector("span");
-        const img  = t.querySelector("img");
-        const txt = normalizeSpace(span?.textContent || "");
-        if (!txt) return;
+    // купоны: обновляем существующие + добавляем отсутствующие (если включены)
+const couponWrap = root.querySelector(".th3-block wrap");
+if (couponWrap){
+  const tips = Array.from(couponWrap.querySelectorAll(".char-tip"));
 
-        const base = couponNames.find(n => txt.toUpperCase().startsWith(n.toUpperCase()));
-        if (!base) return;
+  // 1) что уже есть в HTML
+  const existing = new Map(); // base -> {tip,img,span}
+  tips.forEach(t => {
+    const span = t.querySelector("span");
+    const img  = t.querySelector("img");
+    const txt  = normalizeSpace(span?.textContent || "");
+    if (!txt) return;
 
-        const st = couponState.get(base) || { on:false, count:0 };
-        if (st.on){
-          img && img.classList.remove("nema");
-          if (span) span.textContent = `${base}: ${st.count} шт`;
-        }
-      });
+    const base = couponNames.find(n => txt.toUpperCase().startsWith(n.toUpperCase()));
+    if (!base) return;
+
+    existing.set(base, { tip:t, img, span });
+  });
+
+  // 2) применяем состояние для каждого купона из списка
+  couponNames.forEach(base => {
+    const st = couponState.get(base) || { on:false, count:0 };
+
+    // как у тебя: ничего не делаем, если не включено
+    if (!st.on) return;
+
+    // есть в HTML — обновляем
+    const found = existing.get(base);
+    if (found){
+      found.img && found.img.classList.remove("nema");
+      if (found.span) found.span.textContent = `${base}: ${st.count} шт`;
+      return;
     }
 
+    // нет в HTML — создаём
+    const src = (couponImgByName && couponImgByName[base]) ? String(couponImgByName[base]) : "";
+    const safeSrc = src || "https://forumstatic.ru/files/001c/a3/e7/92654.png";
+
+    const div = doc.createElement("div");
+    div.className = "char-tip";
+    div.setAttribute("data-gen", "1");
+    div.innerHTML = `<img src="${esc(safeSrc)}"><span>${esc(base)}: ${st.count} шт</span>`;
+
+    couponWrap.appendChild(doc.createTextNode("\n"));
+    couponWrap.appendChild(div);
+  });
+}
    // ачивки
 const achWrap = root.querySelector(".th-block wrap");
 const achItems = collectTipItems(a.achList);
