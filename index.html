@@ -1499,33 +1499,55 @@ if (lsBgs.length){
     }
 
     // дефолтная плашка — меняем только текст
-    const def1 = val(a.plashDef1);
-    const def2 = val(a.plashDef2);
+   const def1 = val(a.plashDef1);
+const def2 = val(a.plashDef2);
 
-    const defPlash = root.querySelector(".sec-block .pf-plash");
-    if (defPlash && (def1 || def2)){
-      const style = defPlash.getAttribute("style") || `background: url(${DEFAULT_PROFILE_BG});`;
-      const sub = def2 ? ` <span class="pf-plash__sub">${esc(def2)}</span>` : "";
-      defPlash.setAttribute("style", style);
-      defPlash.innerHTML = `${esc(def1 || defPlash.textContent.trim() || "the crow")}${sub}`;
-    }
+const defPlash = root.querySelector(".sec-block .pf-plash");
+if (defPlash && (def1 || def2)) {
+  const curSubEl = defPlash.querySelector(".pf-plash__sub");
+  const curSub = normalizeSpace(curSubEl?.textContent || "");
+  const curMain = normalizeSpace(defPlash.cloneNode(true).textContent.replace(curSub, "")) || "the crow";
 
-    // добавочные плашки: добавляем ниже дефолтной, чистим прошлые data-gen
-    const wrapPl = root.querySelector(".sec-block wrap");
-    if (wrapPl){
-      $$('.pf-plash[data-gen="1"]', wrapPl).forEach(n => n.remove());
+  const main = def1 || curMain;
+  const sub  = (def2 || curSub) ? ` <span class="pf-plash__sub">${esc(def2 || curSub)}</span>` : "";
 
-      const addPl = collectPlashes();
-      if (addPl.length){
-        const html = addPl.map(p => {
-          const bg = p.bg || DEFAULT_PROFILE_BG;
-          const t1 = p.t1 || "the crow";
-          const sub = p.t2 ? ` <span class="pf-plash__sub">${esc(p.t2)}</span>` : "";
-          return `<div class="pf-plash" data-gen="1" style="background: url(${esc(bg)});">${esc(t1)}${sub}</div>`;
-        }).join("\n");
-        wrapPl.insertAdjacentHTML("beforeend", "\n" + html);
-      }
-    }
+  defPlash.innerHTML = `${esc(main)}${sub}`;
+}
+
+    // добавочные плашки
+   const wrapPl = root.querySelector(".sec-block wrap");
+if (wrapPl){
+  const addPl = collectPlashes();
+  if (addPl.length){
+    // соберём уже существующие плашки (по bg+t1+t2)
+    const existing = new Set(
+      Array.from(wrapPl.querySelectorAll(".pf-plash")).map(el => {
+        const style = (el.getAttribute("style") || "").replace(/\s+/g," ").trim();
+        const t1 = normalizeSpace(el.childNodes[0]?.textContent || el.textContent || "");
+        const t2 = normalizeSpace(el.querySelector(".pf-plash__sub")?.textContent || "");
+        return `${style}||${t1}||${t2}`.toLowerCase();
+      })
+    );
+
+    addPl.forEach(p => {
+      const bg  = p.bg || DEFAULT_PROFILE_BG;
+      const t1  = p.t1 || "the crow";
+      const t2  = p.t2 || "";
+      const key = `background:url(${bg});||${t1}||${t2}`.toLowerCase();
+
+      if (existing.has(key)) return;
+      existing.add(key);
+
+      const div = doc.createElement("div");
+      div.className = "pf-plash";
+      div.setAttribute("style", `background: url(${bg});`);
+      div.innerHTML = `${esc(t1)}${t2 ? ` <span class="pf-plash__sub">${esc(t2)}</span>` : ""}`;
+
+      wrapPl.appendChild(doc.createTextNode("\n"));
+      wrapPl.appendChild(div);
+    });
+  }
+}
 
     // купоны: обновляем существующие + добавляем отсутствующие (если включены)
 const couponWrap = root.querySelector(".th3-block wrap");
