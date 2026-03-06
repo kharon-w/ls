@@ -274,18 +274,6 @@ select option{background:var(--panel);color:var(--ink)}
 
               <div class="row1">
                 <div class="smallTitle">Плашки</div>
-                <div class="hint">На дефолт плашке можно поменять только текст</div>
-              </div>
-
-              <div class="row">
-                <div>
-                  <label>Дефолтная плашка — строка 1</label>
-                  <input id="exPlashDef1" placeholder="the crow" />
-                </div>
-                <div>
-                  <label>Дефолтная плашка — строка 2 (опц.)</label>
-                  <input id="exPlashDef2" placeholder="bewails the sheep" />
-                </div>
               </div>
 
               <div class="row1">
@@ -349,7 +337,7 @@ select option{background:var(--panel);color:var(--ink)}
         <section class="card hidden" id="cardAdminsOut">
           <h2>Результат для админов</h2>
           <textarea id="outAdmins" class="mono" style="min-height:720px" readonly></textarea>
-          <div class="hint">Проверяйте после публикации! Помните, после этого генератора НЕ ставятся заглушки в иконки и коллекцию, если вы не вставите их сами</div>
+          <div class="hint">Проверяйте после публикации! Код изначального ЛС остается вверху до обновления страницы</div>
         </section>
       </aside>
     </div>
@@ -369,62 +357,64 @@ select option{background:var(--panel);color:var(--ink)}
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;");
 
- 
   const tabPlayers = $("tabPlayers");
-  const tabAdmins  = $("tabAdmins");
+  const tabAdmins = $("tabAdmins");
   const boxPlayers = $("boxPlayers");
-  const boxAdmins  = $("boxAdmins");
+  const boxAdmins = $("boxAdmins");
   const cardPlayersOut = $("cardPlayersOut");
-const cardAdminsOut  = $("cardAdminsOut");
+  const cardAdminsOut = $("cardAdminsOut");
 
+  function setMainTab(which) {
+    if (tabPlayers) tabPlayers.setAttribute("aria-pressed", String(which === "players"));
+    if (tabAdmins) tabAdmins.setAttribute("aria-pressed", String(which === "admins"));
+    if (boxPlayers) boxPlayers.classList.toggle("hidden", which !== "players");
+    if (boxAdmins) boxAdmins.classList.toggle("hidden", which !== "admins");
+    if (cardPlayersOut) cardPlayersOut.classList.toggle("hidden", which !== "players");
+    if (cardAdminsOut) cardAdminsOut.classList.toggle("hidden", which !== "admins");
+    renderAll();
+  }
 
- function setMainTab(which){
-  if (tabPlayers) tabPlayers.setAttribute("aria-pressed", String(which === "players"));
-  if (tabAdmins)  tabAdmins.setAttribute("aria-pressed", String(which === "admins"));
-  if (boxPlayers) boxPlayers.classList.toggle("hidden", which !== "players");
-  if (boxAdmins)  boxAdmins.classList.toggle("hidden", which !== "admins");
-
-  if (cardPlayersOut) cardPlayersOut.classList.toggle("hidden", which !== "players");
-  if (cardAdminsOut)  cardAdminsOut.classList.toggle("hidden", which !== "admins");
-
-  renderAll();
-}
   on(tabPlayers, "click", () => setMainTab("players"));
-  on(tabAdmins,  "click", () => setMainTab("admins"));
+  on(tabAdmins, "click", () => setMainTab("admins"));
 
- 
-  async function copyToClipboard(text, statusEl){
-    try{
+  async function copyToClipboard(text, statusEl) {
+    try {
       await navigator.clipboard.writeText(text);
-      if (statusEl){ statusEl.textContent = "Скопировано ✅"; setTimeout(()=>statusEl.textContent="", 1200); }
-    }catch(e){
-      // fallback
-      try{
+      if (statusEl) {
+        statusEl.textContent = "Скопировано ✅";
+        setTimeout(() => (statusEl.textContent = ""), 1200);
+      }
+    } catch (e) {
+      try {
         const ta = document.createElement("textarea");
         ta.value = text;
         ta.style.position = "fixed";
         ta.style.left = "-9999px";
         document.body.appendChild(ta);
-        ta.focus(); ta.select();
+        ta.focus();
+        ta.select();
         document.execCommand("copy");
         ta.remove();
-        if (statusEl){ statusEl.textContent = "Скопировано ✅"; setTimeout(()=>statusEl.textContent="", 1200); }
-      }catch(_){}
+        if (statusEl) {
+          statusEl.textContent = "Скопировано ✅";
+          setTimeout(() => (statusEl.textContent = ""), 1200);
+        }
+      } catch (_) {}
     }
   }
 
- 
+  // players
   const p = {
     onlyChrono: $("pOnlyChrono"),
     btnAddChar: $("pBtnAddChar"),
-    charsList:  $("pCharsList"),
-    out:        $("outPlayers"),
-    status:     $("statusPlayers"),
-    btnCopy:    $("btnCopyPlayers"),
-    btnClear:   $("btnClearPlayers"),
+    charsList: $("pCharsList"),
+    out: $("outPlayers"),
+    status: $("statusPlayers"),
+    btnCopy: $("btnCopyPlayers"),
+    btnClear: $("btnClearPlayers"),
   };
 
-  function makeParticipantRow(){
+  function makeParticipantRow() {
     const wrap = document.createElement("div");
     wrap.className = "ptItem";
     wrap.innerHTML = `
@@ -442,17 +432,20 @@ const cardAdminsOut  = $("cardAdminsOut");
         <button class="action ptDel" type="button">Удалить участника</button>
       </div>
     `;
-    on(wrap.querySelector(".ptDel"), "click", () => { wrap.remove(); renderAll(); });
+    on(wrap.querySelector(".ptDel"), "click", () => {
+      wrap.remove();
+      renderAll();
+    });
     wrap.addEventListener("input", renderAll);
     return wrap;
   }
 
-  function makeEpisodeItem(kind){
+  function makeEpisodeItem(kind) {
     const isAlt = kind === "alt";
-    const cls = kind === "main" ? "ep-link" : (kind === "sns" ? "ep-sns" : "ep-alt");
+    const cls = kind === "main" ? "ep-link" : kind === "sns" ? "ep-sns" : "ep-alt";
     const dateLabel = isAlt ? "Фандом/тема (очень коротко)" : "Дата (00.00.00)";
     const datePh = isAlt ? "фд" : "00.00.00";
-    const titlePh = kind === "sns" ? "СНС эпизод" : (kind === "alt" ? "Альтернативный эпизод" : "Эпизод");
+    const titlePh = kind === "sns" ? "СНС эпизод" : kind === "alt" ? "Альтернативный эпизод" : "Эпизод";
 
     const it = document.createElement("div");
     it.className = "item epItem";
@@ -461,7 +454,7 @@ const cardAdminsOut  = $("cardAdminsOut");
 
     it.innerHTML = `
       <div class="itemHead">
-        <b>${kind === "main" ? "Эпизод" : (kind === "sns" ? "СНС" : "Альтернатива")}</b>
+        <b>${kind === "main" ? "Эпизод" : kind === "sns" ? "СНС" : "Альтернатива"}</b>
         <div style="display:flex;gap:10px;flex-wrap:wrap;">
           <button class="action btnAddPt" type="button">+ участник</button>
           <button class="action btnDel" type="button">Удалить</button>
@@ -491,19 +484,25 @@ const cardAdminsOut  = $("cardAdminsOut");
     `;
 
     const ptList = it.querySelector(".ptList");
-    const addPt = () => { ptList.appendChild(makeParticipantRow()); renderAll(); };
+    const addPt = () => {
+      ptList.appendChild(makeParticipantRow());
+      renderAll();
+    };
 
-    // дефолт: 2 участника (как ты хотел раньше)
-    addPt(); addPt();
+    addPt();
+    addPt();
 
     on(it.querySelector(".btnAddPt"), "click", addPt);
-    on(it.querySelector(".btnDel"), "click", () => { it.remove(); renderAll(); });
+    on(it.querySelector(".btnDel"), "click", () => {
+      it.remove();
+      renderAll();
+    });
 
     it.addEventListener("input", renderAll);
     return it;
   }
 
-  function makePlayersCharItem(idx){
+  function makePlayersCharItem(idx) {
     const it = document.createElement("div");
     it.className = "item pChar";
 
@@ -580,29 +579,31 @@ const cardAdminsOut  = $("cardAdminsOut");
       </div>
     `;
 
-    const delBtn = it.querySelector(".pDelChar");
-    on(delBtn, "click", () => { it.remove(); renumberPlayersChars(); renderAll(); });
+    on(it.querySelector(".pDelChar"), "click", () => {
+      it.remove();
+      renumberPlayersChars();
+      renderAll();
+    });
 
     on(it.querySelector(".pAddEpMain"), "click", () => it.querySelector(".pEpMainList").appendChild(makeEpisodeItem("main")));
-    on(it.querySelector(".pAddEpSNS"),  "click", () => it.querySelector(".pEpSNSList").appendChild(makeEpisodeItem("sns")));
-    on(it.querySelector(".pAddEpAlt"),  "click", () => it.querySelector(".pEpAltList").appendChild(makeEpisodeItem("alt")));
+    on(it.querySelector(".pAddEpSNS"), "click", () => it.querySelector(".pEpSNSList").appendChild(makeEpisodeItem("sns")));
+    on(it.querySelector(".pAddEpAlt"), "click", () => it.querySelector(".pEpAltList").appendChild(makeEpisodeItem("alt")));
 
     it.addEventListener("input", renderAll);
     return it;
   }
 
-  function renumberPlayersChars(){
+  function renumberPlayersChars() {
     if (!p.charsList) return;
     Array.from(p.charsList.querySelectorAll(".pChar")).forEach((it, i) => {
       const b = it.querySelector(".itemHead b");
-      if (b) b.textContent = `Персонаж ${i+1}`;
+      if (b) b.textContent = `Персонаж ${i + 1}`;
     });
   }
 
-  function syncPlayersUI(){
+  function syncPlayersUI() {
     const onlyChrono = !!p.onlyChrono?.checked;
-   
-    $$(".pChar", p.charsList || document).forEach(ch => {
+    $$(".pChar", p.charsList || document).forEach((ch) => {
       const fields = ch.querySelector(".pCharFields");
       if (fields) fields.classList.toggle("hidden", onlyChrono);
     });
@@ -624,39 +625,42 @@ const cardAdminsOut  = $("cardAdminsOut");
   on(p.btnClear, "click", () => {
     if (p.onlyChrono) p.onlyChrono.checked = false;
     if (p.charsList) p.charsList.innerHTML = "";
-    // добавим одного персонажа по умолчанию
     p.btnAddChar?.click();
-    p.status && (p.status.textContent = "Очищено");
-    setTimeout(()=>p.status && (p.status.textContent=""), 900);
+    if (p.status) p.status.textContent = "Очищено";
+    setTimeout(() => p.status && (p.status.textContent = ""), 900);
   });
 
-  function collectEpisodesFromList(listEl){
+  function collectEpisodesFromList(listEl) {
     if (!listEl) return [];
-    return Array.from(listEl.querySelectorAll(".epItem")).map(it => {
-      const kind = it.dataset.kind;
-      const cls  = it.dataset.cls;
-      const date = val(it.querySelector(".epDate"));
-      const title= val(it.querySelector(".epTitle"));
-      const link = val(it.querySelector(".epLink"));
-      const pts  = Array.from(it.querySelectorAll(".ptItem")).map(p => ({
-        name: val(p.querySelector(".ptName")),
-        link: val(p.querySelector(".ptLink")),
-      })).filter(x => x.name || x.link);
+    return Array.from(listEl.querySelectorAll(".epItem"))
+      .map((it) => {
+        const kind = it.dataset.kind;
+        const cls = it.dataset.cls;
+        const date = val(it.querySelector(".epDate"));
+        const title = val(it.querySelector(".epTitle"));
+        const link = val(it.querySelector(".epLink"));
+        const pts = Array.from(it.querySelectorAll(".ptItem"))
+          .map((p) => ({
+            name: val(p.querySelector(".ptName")),
+            link: val(p.querySelector(".ptLink")),
+          }))
+          .filter((x) => x.name || x.link);
 
-      const hasAnything = date || title || link || pts.length;
-      if (!hasAnything) return null;
+        const hasAnything = date || title || link || pts.length;
+        if (!hasAnything) return null;
 
-      return { kind, cls, date, title, link, pts };
-    }).filter(Boolean);
+        return { kind, cls, date, title, link, pts };
+      })
+      .filter(Boolean);
   }
 
-  function buildEpisodeHTML(e){
+  function buildEpisodeHTML(e) {
     const dateSpan = esc(e.date || (e.kind === "alt" ? "фд" : "00.00.00"));
     const title = esc(e.title || (e.kind === "sns" ? "СНС эпизод" : e.kind === "alt" ? "Альтернативный эпизод" : "Эпизод"));
-    const link  = esc(e.link || "#");
+    const link = esc(e.link || "#");
 
     const participants = e.pts.length
-      ? e.pts.map(p => `<a href="${esc(p.link || "#")}">${esc(p.name || "имя")}</a>`).join("")
+      ? e.pts.map((p) => `<a href="${esc(p.link || "#")}">${esc(p.name || "имя")}</a>`).join("")
       : `<a href="#">имя</a><a href="#">игрок</a>`;
 
     return `<div class="${e.cls}">
@@ -665,121 +669,117 @@ const cardAdminsOut  = $("cardAdminsOut");
 </div>`;
   }
 
- function wrapCode(text){
-  const t = (text || "").trim();
-  return t ? `[code]${t}[/code]` : "";
-}
+  function wrapCode(text) {
+    const t = (text || "").trim();
+    return t ? `[code]${t}[/code]` : "";
+  }
 
-function joinWithBlankLine(arr){
-  return arr.filter(Boolean).join("\n\n").trim();
-}
+  function joinWithBlankLine(arr) {
+    return arr.filter(Boolean).join("\n\n").trim();
+  }
 
-function buildPlayersOutput(){
-  const onlyChrono = !!p.onlyChrono?.checked;
-  const out = [];
+  function buildPlayersOutput() {
+    const onlyChrono = !!p.onlyChrono?.checked;
+    const out = [];
+    const chars = Array.from(p.charsList?.querySelectorAll(".pChar") ?? []);
 
-  const chars = Array.from(p.charsList?.querySelectorAll(".pChar") ?? []);
-  chars.forEach((ch, i) => {
-    if (!onlyChrono){
-      const link  = val(ch.querySelector(".pLink"));
-      const en    = val(ch.querySelector(".pEn"));
-      const ru    = val(ch.querySelector(".pRu"));
-      const photo = val(ch.querySelector(".pPhoto"));
-      const quote = val(ch.querySelector(".pQuote"));
-      const mainL = val(ch.querySelector(".pMainLink"));
+    chars.forEach((ch, i) => {
+      if (!onlyChrono) {
+        const link = val(ch.querySelector(".pLink"));
+        const en = val(ch.querySelector(".pEn"));
+        const ru = val(ch.querySelector(".pRu"));
+        const photo = val(ch.querySelector(".pPhoto"));
+        const quote = val(ch.querySelector(".pQuote"));
+        const mainL = val(ch.querySelector(".pMainLink"));
 
-      const lines = [];
-      if (link) lines.push(`1. ${link}`);
-      if (en || ru) lines.push(`2. ${en || "Name Surname"} / ${ru || "Имя Фамилия"}`);
-      if (photo) lines.push(`3. ${photo}`);
-      if (quote) lines.push(`4. ${quote}`);
-      if (mainL) lines.push(`5. ${mainL}`);
+        const lines = [];
+        if (link) lines.push(`1. ${link}`);
+        if (en || ru) lines.push(`2. ${en || "Name Surname"} / ${ru || "Имя Фамилия"}`);
+        if (photo) lines.push(`3. ${photo}`);
+        if (quote) lines.push(`4. ${quote}`);
+        if (mainL) lines.push(`5. ${mainL}`);
 
-      if (lines.length){
-        out.push(`Личная страница:\n${lines.join("\n")}`);
+        if (lines.length) out.push(`Личная страница:\n${lines.join("\n")}`);
       }
-    }
 
-    const main = collectEpisodesFromList(ch.querySelector(".pEpMainList")).map(buildEpisodeHTML);
-    const sns  = collectEpisodesFromList(ch.querySelector(".pEpSNSList")).map(buildEpisodeHTML);
-    const alt  = collectEpisodesFromList(ch.querySelector(".pEpAltList")).map(buildEpisodeHTML);
+      const main = collectEpisodesFromList(ch.querySelector(".pEpMainList")).map(buildEpisodeHTML);
+      const sns = collectEpisodesFromList(ch.querySelector(".pEpSNSList")).map(buildEpisodeHTML);
+      const alt = collectEpisodesFromList(ch.querySelector(".pEpAltList")).map(buildEpisodeHTML);
 
-    const mainBody = joinWithBlankLine(main);
-    const snsBody  = joinWithBlankLine(sns);
-    const altBody  = joinWithBlankLine(alt);
+      const mainBody = joinWithBlankLine(main);
+      const snsBody = joinWithBlankLine(sns);
+      const altBody = joinWithBlankLine(alt);
 
-    if (mainBody) out.push("Основная игра:\n" + wrapCode(mainBody));
-    if (snsBody)  out.push("СНС:\n" + wrapCode(snsBody));
-    if (altBody)  out.push("Альтернатива:\n" + wrapCode(altBody));
+      if (mainBody) out.push("Основная игра:\n" + wrapCode(mainBody));
+      if (snsBody) out.push("СНС:\n" + wrapCode(snsBody));
+      if (altBody) out.push("Альтернатива:\n" + wrapCode(altBody));
 
-    if (i !== chars.length - 1) out.push("");
-  });
+      if (i !== chars.length - 1) out.push("");
+    });
 
-  return out.filter(Boolean).join("\n\n").trim();
-}
+    return out.filter(Boolean).join("\n\n").trim();
+  }
 
-  // ============================================================
-  // ADMINS
-  // ============================================================
+  // admins
   const a = {
-    modeNew:   $("aModeNew"),
+    modeNew: $("aModeNew"),
     modeExist: $("aModeExist"),
-    newBox:    $("aNewBox"),
-    existBox:  $("aExistBox"),
+    newBox: $("aNewBox"),
+    existBox: $("aExistBox"),
 
     btnAddChar: $("btnAddChar"),
-    charsList:  $("charsList"),
+    charsList: $("charsList"),
 
-    existCode:  $("existCode"),
+    existCode: $("existCode"),
     exCharSelect: $("exCharSelect"),
-    exCharCount:  $("exCharCount"),
-    exCharHint:   $("exCharHint"),
+    exCharCount: $("exCharCount"),
+    exCharHint: $("exCharHint"),
 
     bgLSCurrent: $("exBgLSCurrent"),
 
     btnAddLsBg: $("btnAddLsBg"),
-    lsBgList:   $("lsBgList"),
+    lsBgList: $("lsBgList"),
 
     btnAddProfBg: $("btnAddProfBg"),
-    profBgList:   $("profBgList"),
+    profBgList: $("profBgList"),
 
     plashDef1: $("exPlashDef1"),
     plashDef2: $("exPlashDef2"),
     btnAddPlash: $("btnAddPlash"),
-    plashList:   $("plashList"),
+    plashList: $("plashList"),
 
     couponToggles: $("couponToggles"),
 
     btnAddAch: $("btnAddAch"),
-    achList:   $("achList"),
-    btnAddColl:$("btnAddColl"),
-    collList:  $("collList"),
+    achList: $("achList"),
+    btnAddColl: $("btnAddColl"),
+    collList: $("collList"),
 
     epsMain: $("exEpsMain"),
-    epsSNS:  $("exEpsSNS"),
-    epsAlt:  $("exEpsAlt"),
+    epsSNS: $("exEpsSNS"),
+    epsAlt: $("exEpsAlt"),
 
     out: $("outAdmins"),
     status: $("statusAdmins"),
     btnCopy: $("btnCopyAdmins"),
     btnClear: $("btnClearAdmins"),
 
-exBtnAddNewChar: $("exBtnAddNewChar"),
-exNewCharsList:  $("exNewCharsList"),
+    exBtnAddNewChar: $("exBtnAddNewChar"),
+    exNewCharsList: $("exNewCharsList"),
   };
 
   const aMode = () => document.querySelector('input[name="aMode"]:checked')?.value || "new";
 
-  function syncAdminsUI(){
+  function syncAdminsUI() {
     const m = aMode();
-    a.newBox && a.newBox.classList.toggle("hidden", m !== "new");
-    a.existBox && a.existBox.classList.toggle("hidden", m !== "exist");
+    if (a.newBox) a.newBox.classList.toggle("hidden", m !== "new");
+    if (a.existBox) a.existBox.classList.toggle("hidden", m !== "exist");
     renderAll();
   }
-  $$('input[name="aMode"]').forEach(r => on(r, "change", syncAdminsUI));
 
-  
-  function makeAdminCharItem(idx){
+  $$('input[name="aMode"]').forEach((r) => on(r, "change", syncAdminsUI));
+
+  function makeAdminCharItem(idx) {
     const it = document.createElement("div");
     it.className = "item aChar";
     it.innerHTML = `
@@ -831,84 +831,94 @@ exNewCharsList:  $("exNewCharsList"),
       </div>
     `;
 
-    on(it.querySelector(".aDelChar"), "click", () => { it.remove(); renumberAdminChars(); renderAll(); });
+    on(it.querySelector(".aDelChar"), "click", () => {
+      it.remove();
+      renumberAdminChars();
+      renderAll();
+    });
+
     it.addEventListener("input", renderAll);
     return it;
   }
 
-function makeExistAddCharItem(idx){
-  const it = document.createElement("div");
-  it.className = "item exAddChar";
-  it.innerHTML = `
-    <div class="itemHead">
-      <b>Новый персонаж ${idx}</b>
-      <button class="action exDel" type="button">Удалить</button>
-    </div>
-
-    <div class="row">
-      <div>
-        <label>Аватар/иконка</label>
-        <input class="cAv" placeholder="https://..." />
+  function makeExistAddCharItem(idx) {
+    const it = document.createElement("div");
+    it.className = "item exAddChar";
+    it.innerHTML = `
+      <div class="itemHead">
+        <b>Новый персонаж ${idx}</b>
+        <button class="action exDel" type="button">Удалить</button>
       </div>
-      <div>
-        <label>Имя на англ (в переключателе)</label>
-        <input class="cEn" placeholder="Name Surname" />
+
+      <div class="row">
+        <div>
+          <label>Аватар/иконка</label>
+          <input class="cAv" placeholder="https://..." />
+        </div>
+        <div>
+          <label>Имя на англ (в переключателе)</label>
+          <input class="cEn" placeholder="Name Surname" />
+        </div>
       </div>
-    </div>
 
-    <div class="row">
-      <div>
-        <label>Имя на русском (в name)</label>
-        <input class="cRu" placeholder="Имя Фамилия" />
+      <div class="row">
+        <div>
+          <label>Имя на русском (в name)</label>
+          <input class="cRu" placeholder="Имя Фамилия" />
+        </div>
+        <div>
+          <label>Ссылка на профиль</label>
+          <input class="cLink" placeholder="https://..." />
+        </div>
       </div>
-      <div>
-        <label>Ссылка на профиль</label>
-        <input class="cLink" placeholder="https://..." />
+
+      <div class="row1">
+        <label>Цитата</label>
+        <input class="cAbout" placeholder="цитата" />
       </div>
-    </div>
 
-    <div class="row1">
-      <label>Цитата</label>
-      <input class="cAbout" placeholder="цитата" />
-    </div>
+      <div class="row1">
+        <label>Эпизоды (Основная игра) — вставкой целиком</label>
+        <textarea class="cEpsMain mono" placeholder="<div class=&quot;ep-link&quot;>...</div>"></textarea>
+      </div>
+      <div class="row1">
+        <label>Эпизоды (СНС) — вставкой целиком</label>
+        <textarea class="cEpsSNS mono" placeholder="<div class=&quot;ep-sns&quot;>...</div>"></textarea>
+      </div>
+      <div class="row1">
+        <label>Эпизоды (Альтернатива) — вставкой целиком</label>
+        <textarea class="cEpsAlt mono" placeholder="<div class=&quot;ep-alt&quot;>...</div>"></textarea>
+      </div>
+    `;
 
-    <div class="row1">
-      <label>Эпизоды (Основная игра) — вставкой целиком</label>
-      <textarea class="cEpsMain mono" placeholder="<div class=&quot;ep-link&quot;>...</div>"></textarea>
-    </div>
-    <div class="row1">
-      <label>Эпизоды (СНС) — вставкой целиком</label>
-      <textarea class="cEpsSNS mono" placeholder="<div class=&quot;ep-sns&quot;>...</div>"></textarea>
-    </div>
-    <div class="row1">
-      <label>Эпизоды (Альтернатива) — вставкой целиком</label>
-      <textarea class="cEpsAlt mono" placeholder="<div class=&quot;ep-alt&quot;>...</div>"></textarea>
-    </div>
-  `;
+    on(it.querySelector(".exDel"), "click", () => {
+      it.remove();
+      renderAll();
+    });
 
-  on(it.querySelector(".exDel"), "click", ()=>{ it.remove(); renderAll(); });
-  it.addEventListener("input", renderAll);
-  return it;
-}
+    it.addEventListener("input", renderAll);
+    return it;
+  }
 
-function collectExistAddChars(){
-  return Array.from(a.exNewCharsList?.querySelectorAll(".exAddChar") ?? []).map(it => ({
-    av: val(it.querySelector(".cAv")),
-    en: val(it.querySelector(".cEn")),
-    ru: val(it.querySelector(".cRu")),
-    link: val(it.querySelector(".cLink")),
-    about: val(it.querySelector(".cAbout")),
-    epsMain: it.querySelector(".cEpsMain")?.value || "",
-    epsSNS:  it.querySelector(".cEpsSNS")?.value || "",
-    epsAlt:  it.querySelector(".cEpsAlt")?.value || "",
-  })).filter(c => c.av || c.en || c.ru || c.link || c.about || c.epsMain.trim() || c.epsSNS.trim() || c.epsAlt.trim());
-}
+  function collectExistAddChars() {
+    return Array.from(a.exNewCharsList?.querySelectorAll(".exAddChar") ?? [])
+      .map((it) => ({
+        av: val(it.querySelector(".cAv")),
+        en: val(it.querySelector(".cEn")),
+        ru: val(it.querySelector(".cRu")),
+        link: val(it.querySelector(".cLink")),
+        about: val(it.querySelector(".cAbout")),
+        epsMain: it.querySelector(".cEpsMain")?.value || "",
+        epsSNS: it.querySelector(".cEpsSNS")?.value || "",
+        epsAlt: it.querySelector(".cEpsAlt")?.value || "",
+      }))
+      .filter((c) => c.av || c.en || c.ru || c.link || c.about || c.epsMain.trim() || c.epsSNS.trim() || c.epsAlt.trim());
+  }
 
-
-  function renumberAdminChars(){
+  function renumberAdminChars() {
     Array.from(a.charsList?.querySelectorAll(".aChar") ?? []).forEach((it, i) => {
       const b = it.querySelector(".itemHead b");
-      if (b) b.textContent = `Персонаж ${i+1}`;
+      if (b) b.textContent = `Персонаж ${i + 1}`;
     });
   }
 
@@ -919,22 +929,24 @@ function collectExistAddChars(){
     renderAll();
   });
 
-  // --- Admin: Existing LS parsing ---
-  function parseHTML(raw){
+  function parseHTML(raw) {
     const txt = String(raw || "").trim();
     if (!txt) return null;
     return new DOMParser().parseFromString(txt, "text/html");
   }
 
-  function normalizeSpace(s){ return String(s ?? "").trim().replace(/\s+/g," "); }
+  function normalizeSpace(s) {
+    return String(s ?? "").trim().replace(/\s+/g, " ");
+  }
 
-  let exChars = []; // [{idx,nameRu,nameEn,link}]
-  function getCharMetaFromDoc(doc){
+  let exChars = [];
+
+  function getCharMetaFromDoc(doc) {
     const root = doc.body;
-    const nodes = $$(".char-content", root).filter(n => /char-content-\d+/.test(n.className));
+    const nodes = $$(".char-content", root).filter((n) => /char-content-\d+/.test(n.className));
     const map = new Map();
 
-    nodes.forEach(n => {
+    nodes.forEach((n) => {
       const m = n.className.match(/char-content-(\d+)/);
       if (!m) return;
       const idx = Number(m[1]);
@@ -943,7 +955,7 @@ function collectExistAddChars(){
     });
 
     return Array.from(map.entries())
-      .sort((a,b)=>a[0]-b[0])
+      .sort((a, b) => a[0] - b[0])
       .map(([idx, node]) => {
         const aTag = node.querySelector("name a");
         const ru = normalizeSpace(aTag?.textContent || "");
@@ -954,34 +966,31 @@ function collectExistAddChars(){
       });
   }
 
- function refreshExistingCharUI(){
-  if (!a.exCharSelect || !a.exCharCount) return;
+  function refreshExistingCharUI() {
+    if (!a.exCharSelect || !a.exCharCount) return;
 
-  // сохраняем выбор ДО очистки
-  const prev = String(a.exCharSelect.value || "");
+    const prev = String(a.exCharSelect.value || "");
+    a.exCharSelect.innerHTML = "";
 
-  a.exCharSelect.innerHTML = "";
-  exChars.forEach(c => {
-    const opt = document.createElement("option");
-    opt.value = String(c.idx);
-    const title = (c.nameRu || "Имя Фамилия") + (c.nameEn ? ` · ${c.nameEn}` : "");
-    opt.textContent = `Персонаж ${c.idx}: ${title}`;
-    a.exCharSelect.appendChild(opt);
-  });
+    exChars.forEach((c) => {
+      const opt = document.createElement("option");
+      opt.value = String(c.idx);
+      const title = (c.nameRu || "Имя Фамилия") + (c.nameEn ? ` · ${c.nameEn}` : "");
+      opt.textContent = `Персонаж ${c.idx}: ${title}`;
+      a.exCharSelect.appendChild(opt);
+    });
 
-  a.exCharCount.value = String(exChars.length);
+    a.exCharCount.value = String(exChars.length);
 
-  // восстанавливаем выбор, если он ещё существует
-  const hasPrev = exChars.some(x => String(x.idx) === prev);
-  const cur = hasPrev ? prev : (exChars[0]?.idx ? String(exChars[0].idx) : "1");
-  a.exCharSelect.value = cur;
+    const hasPrev = exChars.some((x) => String(x.idx) === prev);
+    const cur = hasPrev ? prev : exChars[0]?.idx ? String(exChars[0].idx) : "1";
+    a.exCharSelect.value = cur;
 
-  const meta = exChars.find(x => String(x.idx) === String(cur));
-  if (a.exCharHint) a.exCharHint.textContent = meta ? `Ссылка: ${meta.link || "—"}` : "";
-}
+    const meta = exChars.find((x) => String(x.idx) === String(cur));
+    if (a.exCharHint) a.exCharHint.textContent = meta ? `Ссылка: ${meta.link || "—"}` : "";
+  }
 
-  
-  function makeImgOnlyRow(container, title){
+  function makeImgOnlyRow(container, title) {
     const it = document.createElement("div");
     it.className = "item";
     it.innerHTML = `
@@ -994,13 +1003,16 @@ function collectExistAddChars(){
         <input class="img" placeholder="https://..." />
       </div>
     `;
-    on(it.querySelector(".btnDel"), "click", ()=>{ it.remove(); renderAll(); });
+    on(it.querySelector(".btnDel"), "click", () => {
+      it.remove();
+      renderAll();
+    });
     it.addEventListener("input", renderAll);
     container.appendChild(it);
     renderAll();
   }
 
-  function makePlashRow(container){
+  function makePlashRow(container) {
     const it = document.createElement("div");
     it.className = "item";
     it.innerHTML = `
@@ -1026,13 +1038,16 @@ function collectExistAddChars(){
         <div></div>
       </div>
     `;
-    on(it.querySelector(".btnDel"), "click", ()=>{ it.remove(); renderAll(); });
+    on(it.querySelector(".btnDel"), "click", () => {
+      it.remove();
+      renderAll();
+    });
     it.addEventListener("input", renderAll);
     container.appendChild(it);
     renderAll();
   }
 
-  function makeTipItem(container, title){
+  function makeTipItem(container, title) {
     const it = document.createElement("div");
     it.className = "item";
     it.innerHTML = `
@@ -1051,7 +1066,10 @@ function collectExistAddChars(){
         </div>
       </div>
     `;
-    on(it.querySelector(".btnDel"), "click", ()=>{ it.remove(); renderAll(); });
+    on(it.querySelector(".btnDel"), "click", () => {
+      it.remove();
+      renderAll();
+    });
     it.addEventListener("input", renderAll);
     container.appendChild(it);
     renderAll();
@@ -1060,41 +1078,43 @@ function collectExistAddChars(){
   on(a.btnAddLsBg, "click", () => a.lsBgList && makeImgOnlyRow(a.lsBgList, "фон ЛС"));
   on(a.btnAddProfBg, "click", () => a.profBgList && makeImgOnlyRow(a.profBgList, "фон профиля (добавить)"));
   on(a.btnAddPlash, "click", () => a.plashList && makePlashRow(a.plashList));
-  on(a.btnAddAch,  "click", () => a.achList && makeTipItem(a.achList, "ачивка"));
+  on(a.btnAddAch, "click", () => a.achList && makeTipItem(a.achList, "ачивка"));
   on(a.btnAddColl, "click", () => a.collList && makeTipItem(a.collList, "коллекция"));
-on(a.exBtnAddNewChar, "click", () => {
-  if (!a.exNewCharsList) return;
-  const idx = a.exNewCharsList.querySelectorAll(".exAddChar").length + 1;
-  a.exNewCharsList.appendChild(makeExistAddCharItem(idx));
-  renderAll();
-});
+  on(a.exBtnAddNewChar, "click", () => {
+    if (!a.exNewCharsList) return;
+    const idx = a.exNewCharsList.querySelectorAll(".exAddChar").length + 1;
+    a.exNewCharsList.appendChild(makeExistAddCharItem(idx));
+    renderAll();
+  });
 
-
-  function collectImgs(listEl){
+  function collectImgs(listEl) {
     if (!listEl) return [];
     return Array.from(listEl.querySelectorAll(".item"))
-      .map(it => val(it.querySelector(".img")))
+      .map((it) => val(it.querySelector(".img")))
       .filter(Boolean);
   }
 
-  function collectPlashes(){
+  function collectPlashes() {
     if (!a.plashList) return [];
-    return Array.from(a.plashList.querySelectorAll(".item")).map(it => ({
-      bg: val(it.querySelector(".pBg")),
-      t1: val(it.querySelector(".pT1")),
-      t2: val(it.querySelector(".pT2")),
-    })).filter(x => x.bg || x.t1 || x.t2);
+    return Array.from(a.plashList.querySelectorAll(".item"))
+      .map((it) => ({
+        bg: val(it.querySelector(".pBg")),
+        t1: val(it.querySelector(".pT1")),
+        t2: val(it.querySelector(".pT2")),
+      }))
+      .filter((x) => x.bg || x.t1 || x.t2);
   }
 
-  function collectTipItems(listEl){
+  function collectTipItems(listEl) {
     if (!listEl) return [];
-    return Array.from(listEl.querySelectorAll(".item")).map(it => ({
-      img: val(it.querySelector(".img")),
-      txt: val(it.querySelector(".txt")),
-    })).filter(x => x.img || x.txt);
+    return Array.from(listEl.querySelectorAll(".item"))
+      .map((it) => ({
+        img: val(it.querySelector(".img")),
+        txt: val(it.querySelector(".txt")),
+      }))
+      .filter((x) => x.img || x.txt);
   }
 
-  // Coupons
   const couponNames = [
     "КУПОН НА ТВИНКА",
     "КУПОН НА ЗАЩИТУ ОТ ЧИСТКИ",
@@ -1107,33 +1127,34 @@ on(a.exBtnAddNewChar, "click", () => {
     "КУПОН НА ЛИМИТНЫЙ НАБОР",
     "КУПОН НА БАН",
   ];
-  const couponState = new Map(); // name -> {on,count}
+
+  const couponState = new Map();
 
   const couponImgByName = {
-  "КУПОН НА ТВИНКА": "https://upforme.ru/uploads/001c/a1/8d/26/714012.png",
-  "КУПОН НА ЗАЩИТУ ОТ ЧИСТКИ": "https://upforme.ru/uploads/001c/a1/8d/26/246859.png",
-  "КУПОН НА ЛИМИТНЫЙ НАБОР": "https://upforme.ru/uploads/001c/a1/8d/26/51385.png",
-  "КУПОН НА ФОН ПРОФИЛЯ ИЛИ ЛС": "https://upforme.ru/uploads/001c/a1/8d/26/596051.png",
-  "КУПОН НА ПЛАШКУ": "https://upforme.ru/uploads/001c/a1/8d/26/459775.png",
-  "КУПОН НА ИКОНКУ В ПОДАРОК": "https://upforme.ru/uploads/001c/a1/8d/26/639482.png",
-  "КУПОН НА АВАТАР ОТ АМС": "https://upforme.ru/uploads/001c/a1/8d/26/489312.png",
-  "КУПОН НА ПРОПУСК ДНЯ В ДЕЙЛИКАХ": "https://upforme.ru/uploads/001c/a1/8d/26/836868.png",
-  "КУПОН НА БАН": "https://upforme.ru/uploads/001c/a1/8d/26/53527.png",
-  "КУПОН НА НАБОР": "https://upforme.ru/uploads/001c/a1/8d/26/809895.png",
-  // новые купоны сюда
-};
+    "КУПОН НА ТВИНКА": "https://upforme.ru/uploads/001c/a1/8d/26/714012.png",
+    "КУПОН НА ЗАЩИТУ ОТ ЧИСТКИ": "https://upforme.ru/uploads/001c/a1/8d/26/246859.png",
+    "КУПОН НА ЛИМИТНЫЙ НАБОР": "https://upforme.ru/uploads/001c/a1/8d/26/51385.png",
+    "КУПОН НА ФОН ПРОФИЛЯ ИЛИ ЛС": "https://upforme.ru/uploads/001c/a1/8d/26/596051.png",
+    "КУПОН НА ПЛАШКУ": "https://upforme.ru/uploads/001c/a1/8d/26/459775.png",
+    "КУПОН НА ИКОНКУ В ПОДАРОК": "https://upforme.ru/uploads/001c/a1/8d/26/639482.png",
+    "КУПОН НА АВАТАР ОТ АМС": "https://upforme.ru/uploads/001c/a1/8d/26/489312.png",
+    "КУПОН НА ПРОПУСК ДНЯ В ДЕЙЛИКАХ": "https://upforme.ru/uploads/001c/a1/8d/26/836868.png",
+    "КУПОН НА БАН": "https://upforme.ru/uploads/001c/a1/8d/26/53527.png",
+    "КУПОН НА НАБОР": "https://upforme.ru/uploads/001c/a1/8d/26/809895.png",
+  };
 
-  function buildCouponsUI(){
+  function buildCouponsUI() {
     if (!a.couponToggles) return;
     a.couponToggles.innerHTML = "";
-    couponNames.forEach(name => {
-      couponState.set(name, couponState.get(name) || { on:false, count:0 });
+
+    couponNames.forEach((name) => {
+      couponState.set(name, couponState.get(name) || { on: false, count: 0 });
 
       const wrap = document.createElement("div");
-      wrap.style.display="flex";
-      wrap.style.gap="10px";
-      wrap.style.flexWrap="wrap";
-      wrap.style.alignItems="center";
+      wrap.style.display = "flex";
+      wrap.style.gap = "10px";
+      wrap.style.flexWrap = "wrap";
+      wrap.style.alignItems = "center";
 
       wrap.innerHTML = `
         <label style="display:inline-flex;align-items:center;gap:8px;margin:0;padding:8px 10px;border:1px solid var(--line);border-radius:999px;background:var(--field2);cursor:pointer;">
@@ -1149,29 +1170,31 @@ on(a.exBtnAddNewChar, "click", () => {
       cOn.checked = couponState.get(name).on;
       cCount.value = couponState.get(name).count ? String(couponState.get(name).count) : "";
 
-      on(cOn, "change", () => { couponState.set(name, { ...couponState.get(name), on:cOn.checked }); renderAll(); });
+      on(cOn, "change", () => {
+        couponState.set(name, { ...couponState.get(name), on: cOn.checked });
+        renderAll();
+      });
+
       on(cCount, "input", () => {
-        const n = Math.max(0, parseInt(cCount.value||"0",10) || 0);
-        couponState.set(name, { ...couponState.get(name), count:n });
+        const n = Math.max(0, parseInt(cCount.value || "0", 10) || 0);
+        couponState.set(name, { ...couponState.get(name), count: n });
         renderAll();
       });
 
       a.couponToggles.appendChild(wrap);
     });
   }
+
   buildCouponsUI();
 
-  
   const DEFAULT_LS_BG = "https://upforme.ru/uploads/001c/a1/8d/26/641428.png";
-  const DEFAULT_ICON  = "https://forumavatars.ru/img/avatars/001c/a1/8d/2-1769246364.png";
+  const DEFAULT_ICON = "https://forumavatars.ru/img/avatars/001c/a1/8d/2-1769246364.png";
+  const DEFAULT_PROFILE_BG = "https://forumstatic.ru/files/001c/a3/e7/96810.jpg";
 
-const DEFAULT_PROFILE_BG = "https://forumstatic.ru/files/001c/a3/e7/96810.jpg";
-
-const NEW_LS_STATIC_TAIL = `
+  const NEW_LS_STATIC_TAIL = `
 <!--КОНЕЦ-->
 
 <div class="blood-act">
-  <!--НАЧАЛО ВКЛАДОК-->
   <input type="radio" name="tabs" id="tab1" class="tab-input" checked>
   <input type="radio" name="tabs" id="tab2" class="tab-input">
 
@@ -1242,74 +1265,74 @@ const NEW_LS_STATIC_TAIL = `
       </div>
     </div>
   </div>
-  <!--КОНЕЦ ВКЛАДОК-->
 </div>
 `.trim();
 
-
-  function collectAdminNewChars(){
-    return Array.from(a.charsList?.querySelectorAll(".aChar") ?? []).map(it => ({
-      av:    val(it.querySelector(".cAv")),
-      en:    val(it.querySelector(".cEn")),
-      ru:    val(it.querySelector(".cRu")),
-      link:  val(it.querySelector(".cLink")),
+  function collectAdminNewChars() {
+    return Array.from(a.charsList?.querySelectorAll(".aChar") ?? []).map((it) => ({
+      av: val(it.querySelector(".cAv")),
+      en: val(it.querySelector(".cEn")),
+      ru: val(it.querySelector(".cRu")),
+      link: val(it.querySelector(".cLink")),
       about: val(it.querySelector(".cAbout")),
       epsMain: it.querySelector(".cEpsMain")?.value || "",
-      epsSNS:  it.querySelector(".cEpsSNS")?.value || "",
-      epsAlt:  it.querySelector(".cEpsAlt")?.value || "",
+      epsSNS: it.querySelector(".cEpsSNS")?.value || "",
+      epsAlt: it.querySelector(".cEpsAlt")?.value || "",
     }));
   }
 
-  function buildNewLSFromChars(chars){
-    const list = (chars && chars.length) ? chars : [{}];
+  function buildNewLSFromChars(chars) {
+    const list = chars && chars.length ? chars : [{}];
     const count = list.length;
 
-    const radios = Array.from({length:count}, (_,i)=>
-      `<input type="radio" name="char-tabs" id="char-tab-${i+1}" class="char-tab-input"${i===0?" checked":""}>`
-    ).join("\n    ");
+    const radios = Array.from({ length: count }, (_, i) => `<input type="radio" name="char-tabs" id="char-tab-${i + 1}" class="char-tab-input"${i === 0 ? " checked" : ""}>`).join("\n    ");
 
-    const tips = list.map((c,i)=>{
-      const av = esc(c.av || DEFAULT_ICON);
-      const en = esc(c.en || "Name Surname");
-      return `
-        <label for="char-tab-${i+1}" class="char-tip">
+    const tips = list
+      .map((c, i) => {
+        const av = esc(c.av || DEFAULT_ICON);
+        const en = esc(c.en || "Name Surname");
+        return `
+        <label for="char-tab-${i + 1}" class="char-tip">
             <img src="${av}" style="border-radius:4px;">
             <span>${en}</span>
         </label>`;
-    }).join("\n");
+      })
+      .join("\n");
 
-    const contents = list.map((c,i)=>{
-      const ru = esc(c.ru || "Имя Фамилия");
-      const link = esc(c.link || "#");
-      const av = esc(c.av || DEFAULT_ICON);
-      const about = esc(c.about || "цитата или короткое инфо");
+    const contents = list
+      .map((c, i) => {
+        const ru = esc(c.ru || "Имя Фамилия");
+        const link = esc(c.link || "#");
+        const av = esc(c.av || DEFAULT_ICON);
+        const about = esc(c.about || "цитата или короткое инфо");
 
-      const m = String(c.epsMain||"").trim();
-      const s = String(c.epsSNS||"").trim();
-      const a_ = String(c.epsAlt||"").trim();
+        const m = String(c.epsMain || "").trim();
+        const s = String(c.epsSNS || "").trim();
+        const a_ = String(c.epsAlt || "").trim();
 
-      const parts = [];
-      if (m) parts.push(`<div class="ep-altn">Основная игра</div>\n${m}`);
-      if (s) parts.push(`<div class="ep-altn">СНС эпизоды</div>\n${s}`);
-      if (a_) parts.push(`<div class="ep-altn">Альтернатива</div>\n${a_}`);
+        const parts = [];
+        if (m) parts.push(`<div class="ep-altn">Основная игра</div>\n${m}`);
+        if (s) parts.push(`<div class="ep-altn">СНС эпизоды</div>\n${s}`);
+        if (a_) parts.push(`<div class="ep-altn">Альтернатива</div>\n${a_}`);
 
-      const chrono = parts.length ? parts.join("\n\n") : "";
+        const chrono = parts.length ? parts.join("\n\n") : "";
 
-      return `
-    <div class="char-content char-content-${i+1}">
+        return `
+    <div class="char-content char-content-${i + 1}">
         <name><a href="${link}">${ru}</a></name>
         <av><img src="${av}"></av>
         <about>${about}</about>
 
         <div class="eps-ls">
             <ls>
-${chrono ? "                " + chrono.replace(/\n/g,"\n                ") : ""}
+${chrono ? "                " + chrono.replace(/\n/g, "\n                ") : ""}
             </ls>
         </div>
     </div>`;
-    }).join("\n");
+      })
+      .join("\n");
 
-  return `
+    return `
 <div class='character'>
 <info>
 
@@ -1332,345 +1355,320 @@ ${NEW_LS_STATIC_TAIL}
 </div>`.trim();
   }
 
+  function collectAllCouponTips(wrap) {
+    return Array.from(wrap.querySelectorAll(".char-tip")).map((tip) => {
+      const img = tip.querySelector("img");
+      const span = tip.querySelector("span");
+      const txt = normalizeSpace(span?.textContent || "");
+      const base = couponNames.find((name) => txt.toUpperCase().startsWith(name.toUpperCase()));
+      return { tip, img, span, txt, base };
+    });
+  }
 
-  function applyExistingSmart(raw){
+  function findCouponTipByBase(wrap, base) {
+    const items = collectAllCouponTips(wrap);
+    return items.find((x) => x.base === base) || null;
+  }
+
+  function applyExistingSmart(raw) {
     const doc = parseHTML(raw);
     if (!doc) return "";
+
     const root = doc.body;
 
-   
     exChars = getCharMetaFromDoc(doc);
     refreshExistingCharUI();
 
-const addChars = collectExistAddChars();
+    // новые персонажи
+    const addChars = collectExistAddChars();
+    if (addChars.length) {
+      const crow = root.querySelector(".crow-info") || root.querySelector(".character .crow-info");
+      const tipsBox = crow ? crow.querySelector(".ls-twnk") : null;
 
-if (addChars.length){
-  const crow = root.querySelector(".crow-info") || root.querySelector(".character .crow-info");
-  const tipsBox = crow ? crow.querySelector(".ls-twnk") : null;
+      if (crow && tipsBox) {
+        const existingContents = $$(".char-content", root)
+          .filter((n) => /char-content-\d+/.test(n.className))
+          .map((n) => Number((n.className.match(/char-content-(\d+)/) || [])[1] || 0))
+          .filter(Boolean);
 
-  if (crow && tipsBox){
-    // 1) найдём максимальный индекс существующих персонажей
-    const existingContents = $$(".char-content", root)
-      .filter(n => /char-content-\d+/.test(n.className))
-      .map(n => Number((n.className.match(/char-content-(\d+)/)||[])[1] || 0))
-      .filter(Boolean);
+        let next = (existingContents.length ? Math.max(...existingContents) : 0) + 1;
+        const radios = crow.querySelectorAll("input.char-tab-input");
+        let lastR = radios.length ? radios[radios.length - 1] : null;
 
-    const maxIdx = existingContents.length ? Math.max(...existingContents) : 0;
-    let next = maxIdx + 1;
+        addChars.forEach((c) => {
+          const idx = next++;
 
-    // 2) последний radio
-    const radios = crow.querySelectorAll("input.char-tab-input");
-    let lastR = radios.length ? radios[radios.length - 1] : null;
+          const radio = doc.createElement("input");
+          radio.type = "radio";
+          radio.name = "char-tabs";
+          radio.id = `char-tab-${idx}`;
+          radio.className = "char-tab-input";
 
-    addChars.forEach(c => {
-      const idx = next++;
+          if (lastR && lastR.parentNode) {
+            lastR.insertAdjacentElement("afterend", radio);
+            lastR = radio;
+          } else {
+            crow.appendChild(radio);
+            lastR = radio;
+          }
 
-      const radio = doc.createElement("input");
-      radio.type = "radio";
-      radio.name = "char-tabs";
-      radio.id = `char-tab-${idx}`;
-      radio.className = "char-tab-input";
+          const label = doc.createElement("label");
+          label.className = "char-tip";
+          label.setAttribute("for", `char-tab-${idx}`);
+          label.innerHTML = `<img src="${esc(c.av || DEFAULT_ICON)}" style="border-radius:4px;"><span>${esc(c.en || "Name Surname")}</span>`;
+          tipsBox.appendChild(label);
 
-      if (lastR && lastR.parentNode){
-        lastR.insertAdjacentElement("afterend", radio);
-        lastR = radio;
-      } else {
-        crow.appendChild(radio);
-        lastR = radio;
-      }
+          const content = doc.createElement("div");
+          content.className = `char-content char-content-${idx}`;
 
-      const label = doc.createElement("label");
-      label.className = "char-tip";
-      label.setAttribute("for", `char-tab-${idx}`);
+          const parts = [];
+          if (String(c.epsMain || "").trim()) parts.push(`<div class="ep-altn">Основная игра</div>\n${String(c.epsMain).trim()}`);
+          if (String(c.epsSNS || "").trim()) parts.push(`<div class="ep-altn">СНС эпизоды</div>\n${String(c.epsSNS).trim()}`);
+          if (String(c.epsAlt || "").trim()) parts.push(`<div class="ep-altn">Альтернатива</div>\n${String(c.epsAlt).trim()}`);
 
-      const av = esc(c.av || DEFAULT_ICON);
-      const en = esc(c.en || "Name Surname");
-      label.innerHTML = `<img src="${av}" style="border-radius:4px;"><span>${en}</span>`;
-      tipsBox.appendChild(label);
-
-      const content = doc.createElement("div");
-      content.className = `char-content char-content-${idx}`;
-
-      const ru = esc(c.ru || "Имя Фамилия");
-      const link = esc(c.link || "#");
-      const about = esc(c.about || "цитата или короткое инфо");
-
-      const m = String(c.epsMain||"").trim();
-      const s = String(c.epsSNS||"").trim();
-      const a_ = String(c.epsAlt||"").trim();
-
-      const parts = [];
-      if (m) parts.push(`<div class="ep-altn">Основная игра</div>\n${m}`);
-      if (s) parts.push(`<div class="ep-altn">СНС эпизоды</div>\n${s}`);
-      if (a_) parts.push(`<div class="ep-altn">Альтернатива</div>\n${a_}`);
-
-      const chrono = parts.length ? parts.join("\n\n") : "";
-
-      content.innerHTML = `
-        <name><a href="${link}">${ru}</a></name>
-        <av><img src="${av}"></av>
-        <about>${about}</about>
+          content.innerHTML = `
+        <name><a href="${esc(c.link || "#")}">${esc(c.ru || "Имя Фамилия")}</a></name>
+        <av><img src="${esc(c.av || DEFAULT_ICON)}"></av>
+        <about>${esc(c.about || "цитата или короткое инфо")}</about>
         <div class="eps-ls">
           <ls>
-${chrono ? "            " + chrono.replace(/\n/g,"\n            ") : ""}
+${parts.length ? "            " + parts.join("\n\n").replace(/\n/g, "\n            ") : ""}
           </ls>
         </div>
       `.trim();
 
-      const allContents = crow.querySelectorAll(".char-content");
-      const lastContent = allContents.length ? allContents[allContents.length - 1] : null;
+          const allContents = crow.querySelectorAll(".char-content");
+          const lastContent = allContents.length ? allContents[allContents.length - 1] : null;
 
-      if (lastContent && lastContent.parentNode){
-        lastContent.insertAdjacentElement("afterend", content);
-      } else {
-        crow.appendChild(content);
+          if (lastContent && lastContent.parentNode) lastContent.insertAdjacentElement("afterend", content);
+          else crow.appendChild(content);
+        });
+
+        exChars = getCharMetaFromDoc(doc);
+        refreshExistingCharUI();
       }
-    });
-
-    exChars = getCharMetaFromDoc(doc);
-    refreshExistingCharUI();
-  }
-}
-
+    }
 
     const selectedIdx = Number(a.exCharSelect?.value || exChars[0]?.idx || 1);
 
- // фон ЛС текущий — заменить
-const bgLSCur = val(a.bgLSCurrent);
-if (bgLSCur){
-  const fon1 = root.querySelector(".crow-info img.fon");
-  if (fon1) fon1.setAttribute("src", bgLSCur);
+    // текущий фон ЛС
+    const bgLSCur = val(a.bgLSCurrent);
+    if (bgLSCur) {
+      const fon1 = root.querySelector(".crow-info img.fon");
+      if (fon1) fon1.setAttribute("src", bgLSCur);
 
-  const wrapLs = root.querySelector(".lsfn-block wrap");
-  if (wrapLs){
-    const first = wrapLs.querySelector("img");
-    const old = (first?.getAttribute("src") || "").trim();
-
-    if (first) first.setAttribute("src", bgLSCur);
-
-    if (old && old !== bgLSCur){
-      const hasOld = Array.from(wrapLs.querySelectorAll("img"))
-        .some(img => (img.getAttribute("src") || "").trim() === old);
-      if (!hasOld){
-        const img = doc.createElement("img");
-        img.className = "fon";
-        img.setAttribute("src", old);
-        wrapLs.appendChild(doc.createTextNode("\n"));
-        wrapLs.appendChild(img);
+      const wrapLs = root.querySelector(".lsfn-block wrap");
+      if (wrapLs) {
+        const first = wrapLs.querySelector("img");
+        if (first) first.setAttribute("src", bgLSCur);
       }
     }
-  }
-}
 
-   
-   const lsBgs = collectImgs(a.lsBgList);
-if (lsBgs.length){
-  const wrap = root.querySelector(".lsfn-block wrap");
-  if (wrap){
-    const existing = new Set(
-      Array.from(wrap.querySelectorAll("img"))
-        .map(img => (img.getAttribute("src") || "").trim())
-        .filter(Boolean)
-    );
+    // коллекция фонов ЛС
+    const lsBgs = collectImgs(a.lsBgList);
+    if (lsBgs.length) {
+      const wrap = root.querySelector(".lsfn-block wrap");
+      if (wrap) {
+        const existing = new Set(
+          Array.from(wrap.querySelectorAll("img"))
+            .map((img) => (img.getAttribute("src") || "").trim())
+            .filter(Boolean)
+        );
 
-    lsBgs.forEach(u => {
-      const url = String(u || "").trim();
-      if (!url || existing.has(url)) return;
-      existing.add(url);
-      const img = doc.createElement("img");
-      img.className = "fon";
-      img.setAttribute("src", url);
-      wrap.appendChild(doc.createTextNode("\n"));
-      wrap.appendChild(img);
-    });
-  }
-}
+        lsBgs.forEach((u) => {
+          const url = String(u || "").trim();
+          if (!url || existing.has(url)) return;
+          existing.add(url);
+          const img = doc.createElement("img");
+          img.className = "fon";
+          img.setAttribute("src", url);
+          wrap.appendChild(doc.createTextNode("\n"));
+          wrap.appendChild(img);
+        });
+      }
+    }
 
-    // коллекция фонов профиля: НЕ заменяем дефолт, только ДОБАВЛЯЕМ новые в wrap
+    // коллекция фонов профиля
     const profBgs = collectImgs(a.profBgList);
-    if (profBgs.length){
+    if (profBgs.length) {
       const wrap = root.querySelector(".fst-block wrap");
-      if (wrap){
-        // оставляем то, что было, и добавляем новые
-        const existing = wrap.innerHTML.trim();
-        const add = profBgs.map(u => `<img src="${esc(u)}">`).join("\n");
-        wrap.innerHTML = existing ? (existing + "\n" + add) : add;
+      if (wrap) {
+        const existing = new Set(
+          Array.from(wrap.querySelectorAll("img"))
+            .map((img) => (img.getAttribute("src") || "").trim())
+            .filter(Boolean)
+        );
+
+        profBgs.forEach((u) => {
+          const url = String(u || "").trim();
+          if (!url || existing.has(url)) return;
+          existing.add(url);
+          const img = doc.createElement("img");
+          img.setAttribute("src", url);
+          wrap.appendChild(doc.createTextNode("\n"));
+          wrap.appendChild(img);
+        });
       }
     }
 
-    // дефолтная плашка — меняем только текст
-   const def1 = val(a.plashDef1);
-const def2 = val(a.plashDef2);
+    // плашки
+    const wrapPl = root.querySelector(".sec-block wrap");
+    if (wrapPl) {
+      const addPl = collectPlashes();
+      const existing = new Set(
+        Array.from(wrapPl.querySelectorAll(".pf-plash")).map((el) => {
+          const style = (el.getAttribute("style") || "").replace(/\s+/g, " ").trim();
+          const t1 = normalizeSpace(el.childNodes[0]?.textContent || "");
+          const t2 = normalizeSpace(el.querySelector(".pf-plash__sub")?.textContent || "");
+          return `${style}||${t1}||${t2}`.toLowerCase();
+        })
+      );
 
-const defPlash = root.querySelector(".sec-block .pf-plash");
-if (defPlash && (def1 || def2)) {
-  const curSubEl = defPlash.querySelector(".pf-plash__sub");
-  const curSub = normalizeSpace(curSubEl?.textContent || "");
-  const curMain = normalizeSpace(defPlash.cloneNode(true).textContent.replace(curSub, "")) || "the crow";
+      addPl.forEach((p) => {
+        const bg = p.bg || DEFAULT_PROFILE_BG;
+        const t1 = p.t1 || "the crow";
+        const t2 = p.t2 || "";
+        const key = `background: url(${bg});||${t1}||${t2}`.replace(/\s+/g, " ").trim().toLowerCase();
 
-  const main = def1 || curMain;
-  const sub  = (def2 || curSub) ? ` <span class="pf-plash__sub">${esc(def2 || curSub)}</span>` : "";
+        if (existing.has(key)) return;
+        existing.add(key);
 
-  defPlash.innerHTML = `${esc(main)}${sub}`;
-}
-
-    // добавочные плашки
-   const wrapPl = root.querySelector(".sec-block wrap");
-if (wrapPl){
-  const addPl = collectPlashes();
-  if (addPl.length){
-    // соберём уже существующие плашки (по bg+t1+t2)
-    const existing = new Set(
-      Array.from(wrapPl.querySelectorAll(".pf-plash")).map(el => {
-        const style = (el.getAttribute("style") || "").replace(/\s+/g," ").trim();
-        const t1 = normalizeSpace(el.childNodes[0]?.textContent || el.textContent || "");
-        const t2 = normalizeSpace(el.querySelector(".pf-plash__sub")?.textContent || "");
-        return `${style}||${t1}||${t2}`.toLowerCase();
-      })
-    );
-
-    addPl.forEach(p => {
-      const bg  = p.bg || DEFAULT_PROFILE_BG;
-      const t1  = p.t1 || "the crow";
-      const t2  = p.t2 || "";
-      const key = `background:url(${bg});||${t1}||${t2}`.toLowerCase();
-
-      if (existing.has(key)) return;
-      existing.add(key);
-
-      const div = doc.createElement("div");
-      div.className = "pf-plash";
-      div.setAttribute("style", `background: url(${bg});`);
-      div.innerHTML = `${esc(t1)}${t2 ? ` <span class="pf-plash__sub">${esc(t2)}</span>` : ""}`;
-
-      wrapPl.appendChild(doc.createTextNode("\n"));
-      wrapPl.appendChild(div);
-    });
-  }
-}
-
-    // купоны: обновляем существующие + добавляем отсутствующие (если включены)
-const couponWrap = root.querySelector(".th3-block wrap");
-if (couponWrap){
-  const tips = Array.from(couponWrap.querySelectorAll(".char-tip"));
-
-  // 1) что уже есть в HTML
-  const existing = new Map(); // base -> {tip,img,span}
-  tips.forEach(t => {
-    const span = t.querySelector("span");
-    const img  = t.querySelector("img");
-    const txt  = normalizeSpace(span?.textContent || "");
-    if (!txt) return;
-
-    const base = couponNames.find(n => txt.toUpperCase().startsWith(n.toUpperCase()));
-    if (!base) return;
-
-    existing.set(base, { tip:t, img, span });
-  });
-
-  // 2) применяем состояние для каждого купона из списка
-  couponNames.forEach(base => {
-    const st = couponState.get(base) || { on:false, count:0 };
-
-    // как у тебя: ничего не делаем, если не включено
-    if (!st.on) return;
-
-    // есть в HTML — обновляем
-    const found = existing.get(base);
-    if (found){
-      found.img && found.img.classList.remove("nema");
-      if (found.span) found.span.textContent = `${base}: ${st.count} шт`;
-      return;
+        const div = doc.createElement("div");
+        div.className = "pf-plash";
+        div.setAttribute("style", `background: url(${bg});`);
+        div.innerHTML = `${esc(t1)}${t2 ? ` <span class="pf-plash__sub">${esc(t2)}</span>` : ""}`;
+        wrapPl.appendChild(doc.createTextNode("\n"));
+        wrapPl.appendChild(div);
+      });
     }
 
-    // нет в HTML — создаём
-    const src = (couponImgByName && couponImgByName[base]) ? String(couponImgByName[base]) : "";
-    const safeSrc = src || "https://forumstatic.ru/files/001c/a3/e7/92654.png";
+    // купоны
+    const couponWrap = root.querySelector(".th3-block wrap");
+    if (couponWrap) {
+      couponNames.forEach((base) => {
+        const st = couponState.get(base) || { on: false, count: 0 };
+        let found = findCouponTipByBase(couponWrap, base);
 
-    const div = doc.createElement("div");
-    div.className = "char-tip";
-    div.setAttribute("data-gen", "1");
-    div.innerHTML = `<img src="${esc(safeSrc)}"><span>${esc(base)}: ${st.count} шт</span>`;
+        if (!found) {
+          const src = couponImgByName[base] || "https://forumstatic.ru/files/001c/a3/e7/92654.png";
+          const div = doc.createElement("div");
+          div.className = "char-tip";
+          div.setAttribute("data-gen", "1");
+          div.innerHTML = `<img class="nema" src="${esc(src)}"><span>${esc(base)}: 0 шт</span>`;
+          couponWrap.appendChild(doc.createTextNode("\n"));
+          couponWrap.appendChild(div);
+          found = findCouponTipByBase(couponWrap, base);
+        }
 
-    couponWrap.appendChild(doc.createTextNode("\n"));
-    couponWrap.appendChild(div);
-  });
-}
-   // ачивки
-const achWrap = root.querySelector(".th-block wrap");
-const achItems = collectTipItems(a.achList);
+        if (!found) return;
 
-if (achWrap){
-  
-  $$('.char-tip[data-gen="1"]', achWrap).forEach(n => n.remove());
+        if (found.span) found.span.textContent = `${base}: ${st.on ? st.count : 0} шт`;
 
-  if (achItems.length){
-    const html = achItems.map(x => {
-      const img = x.img || "https://forumstatic.ru/files/001c/a3/e7/92654.png";
-      const txt = x.txt || "Текст";
-      return `<div class="char-tip" data-gen="1"><img src="${esc(img)}"><span>${esc(txt)}</span></div>`;
-    }).join("\n");
-
-    achWrap.insertAdjacentHTML("beforeend", "\n" + html);
-  }
-}
-
-   // коллекция
-const collWrap = root.querySelector(".th2-block wrap");
-const collItems = collectTipItems(a.collList);
-
-if (collWrap){
-  $$('.char-tip[data-gen="1"]', collWrap).forEach(n => n.remove());
-
-  if (collItems.length){
-    const html = collItems.map(x => {
-      const img = x.img || DEFAULT_ICON;
-      const txt = x.txt || "Текст";
-      return `<div class="char-tip" data-gen="1"><img src="${esc(img)}"><span>${esc(txt)}</span></div>`;
-    }).join("\n");
-
-    collWrap.insertAdjacentHTML("beforeend", "\n" + html);
-  }
-}
-    // эпизоды: применяем к выбранному персонажу 
-const charNode = root.querySelector(`.char-content-${selectedIdx}`) || root.querySelector(".char-content");
-if (charNode){
-  const ls = charNode.querySelector(".eps-ls ls") || charNode.querySelector("ls");
-  if (ls){
-    const m  = String(a.epsMain?.value ?? "").trim();
-    const s  = String(a.epsSNS?.value ?? "").trim();
-    const a_ = String(a.epsAlt?.value ?? "").trim();
-
-    const parts = [];
-    if (m)  parts.push(`<div class="ep-altn">Основная игра</div>\n${m}`);
-    if (s)  parts.push(`<div class="ep-altn">СНС эпизоды</div>\n${s}`);
-    if (a_) parts.push(`<div class="ep-altn">Альтернатива</div>\n${a_}`);
-
- 
-    const oldGen = ls.querySelector('.ls-gen-eps[data-gen="1"]');
-    if (oldGen) oldGen.remove();
-
-   
-    if (parts.length){
-      const gen = doc.createElement("div");
-      gen.className = "ls-gen-eps";
-      gen.setAttribute("data-gen", "1");
-      gen.innerHTML = parts.join("\n\n");
-
-      ls.appendChild(doc.createTextNode("\n"));
-      ls.appendChild(gen);
-      ls.appendChild(doc.createTextNode("\n"));
+        if (found.img) {
+          if (st.on) found.img.classList.remove("nema");
+          else found.img.classList.add("nema");
+        }
+      });
     }
-  }
-}
+
+    // ачивки
+    const achWrap = root.querySelector(".th-block wrap");
+    const achItems = collectTipItems(a.achList);
+    if (achWrap && achItems.length) {
+      const existing = new Set(
+        Array.from(achWrap.querySelectorAll(".char-tip")).map((el) => {
+          const img = (el.querySelector("img")?.getAttribute("src") || "").trim();
+          const txt = normalizeSpace(el.querySelector("span")?.textContent || "");
+          return `${img}||${txt}`.toLowerCase();
+        })
+      );
+
+      achItems.forEach((x) => {
+        const img = x.img || "https://forumstatic.ru/files/001c/a3/e7/92654.png";
+        const txt = x.txt || "Текст";
+        const key = `${img}||${txt}`.toLowerCase();
+        if (existing.has(key)) return;
+        existing.add(key);
+
+        const div = doc.createElement("div");
+        div.className = "char-tip";
+        div.setAttribute("data-gen", "1");
+        div.innerHTML = `<img src="${esc(img)}"><span>${esc(txt)}</span>`;
+        achWrap.appendChild(doc.createTextNode("\n"));
+        achWrap.appendChild(div);
+      });
+    }
+
+    // коллекция
+    const collWrap = root.querySelector(".th2-block wrap");
+    const collItems = collectTipItems(a.collList);
+    if (collWrap && collItems.length) {
+      const existing = new Set(
+        Array.from(collWrap.querySelectorAll(".char-tip")).map((el) => {
+          const img = (el.querySelector("img")?.getAttribute("src") || "").trim();
+          const txt = normalizeSpace(el.querySelector("span")?.textContent || "");
+          return `${img}||${txt}`.toLowerCase();
+        })
+      );
+
+      collItems.forEach((x) => {
+        const img = x.img || DEFAULT_ICON;
+        const txt = x.txt || "Текст";
+        const key = `${img}||${txt}`.toLowerCase();
+        if (existing.has(key)) return;
+        existing.add(key);
+
+        const div = doc.createElement("div");
+        div.className = "char-tip";
+        div.setAttribute("data-gen", "1");
+        div.innerHTML = `<img src="${esc(img)}"><span>${esc(txt)}</span>`;
+        collWrap.appendChild(doc.createTextNode("\n"));
+        collWrap.appendChild(div);
+      });
+    }
+
+    // эпизоды
+    const charNode = root.querySelector(`.char-content-${selectedIdx}`) || root.querySelector(".char-content");
+    if (charNode) {
+      const ls = charNode.querySelector(".eps-ls ls") || charNode.querySelector("ls");
+      if (ls) {
+        const m = String(a.epsMain?.value ?? "").trim();
+        const s = String(a.epsSNS?.value ?? "").trim();
+        const a_ = String(a.epsAlt?.value ?? "").trim();
+
+        const parts = [];
+        if (m) parts.push(`<div class="ep-altn">Основная игра</div>\n${m}`);
+        if (s) parts.push(`<div class="ep-altn">СНС эпизоды</div>\n${s}`);
+        if (a_) parts.push(`<div class="ep-altn">Альтернатива</div>\n${a_}`);
+
+        if (parts.length) {
+          const key = parts.join("\n\n").replace(/\s+/g, " ").trim();
+
+          const existingBlocks = Array.from(ls.querySelectorAll(".ls-gen-eps, .ep-altn")).map((n) =>
+            normalizeSpace(n.outerHTML || n.textContent || "")
+          );
+
+          const already = existingBlocks.some((x) => x.includes(normalizeSpace(key)));
+          if (!already) {
+            const gen = doc.createElement("div");
+            gen.className = "ls-gen-eps";
+            gen.setAttribute("data-gen", "1");
+            gen.innerHTML = parts.join("\n\n");
+
+            ls.appendChild(doc.createTextNode("\n"));
+            ls.appendChild(gen);
+            ls.appendChild(doc.createTextNode("\n"));
+          }
+        }
+      }
+    }
+
     return root.innerHTML.trim();
   }
 
-  // Admin buttons
   on(a.btnCopy, "click", () => copyToClipboard(String(a.out?.value ?? ""), a.status));
 
   on(a.btnClear, "click", () => {
-    // reset minimal
     if (a.existCode) a.existCode.value = "";
     if (a.exCharSelect) a.exCharSelect.innerHTML = "";
     if (a.exCharCount) a.exCharCount.value = "0";
@@ -1686,94 +1684,73 @@ if (charNode){
     if (a.epsMain) a.epsMain.value = "";
     if (a.epsSNS) a.epsSNS.value = "";
     if (a.epsAlt) a.epsAlt.value = "";
+    if (a.exNewCharsList) a.exNewCharsList.innerHTML = "";
 
-    // reset coupons
-    couponNames.forEach(n => couponState.set(n, { on:false, count:0 }));
+    couponNames.forEach((n) => couponState.set(n, { on: false, count: 0 }));
     buildCouponsUI();
 
-    // new mode chars
     if (a.charsList) a.charsList.innerHTML = "";
     a.btnAddChar?.click();
 
-    a.status && (a.status.textContent = "Очищено");
-    setTimeout(()=>a.status && (a.status.textContent=""), 900);
+    if (a.status) a.status.textContent = "Очищено";
+    setTimeout(() => a.status && (a.status.textContent = ""), 900);
     renderAll();
   });
 
-  // Inputs that should trigger rerender in admin exist-mode
-  [
-    a.existCode, a.exCharSelect,
-    a.bgLSCurrent,
-    a.plashDef1, a.plashDef2,
-    a.epsMain, a.epsSNS, a.epsAlt,
-  ].forEach(el => {
+  [a.existCode, a.exCharSelect, a.bgLSCurrent, a.plashDef1, a.plashDef2, a.epsMain, a.epsSNS, a.epsAlt].forEach((el) => {
     on(el, "input", renderAll);
     on(el, "change", renderAll);
   });
 
-  // ============================================================
-  // RENDER ALL
-  // ============================================================
-  function buildAdminsOutput(){
+  function buildAdminsOutput() {
     const m = aMode();
-    if (m === "new"){
+    if (m === "new") {
       const chars = collectAdminNewChars();
       return buildNewLSFromChars(chars);
     }
-    // existing
+
     const raw = val(a.existCode);
     if (!raw) return "";
     return applyExistingSmart(raw);
   }
 
-  function renderAll(){
-    // players
-    if (p.out){
-      p.out.value = buildPlayersOutput();
-    }
-
-    // admins
-    if (a.out){
-      const html = buildAdminsOutput();
-      a.out.value = html; // ВАЖНО: без [code]
-    }
+  function renderAll() {
+    if (p.out) p.out.value = buildPlayersOutput();
+    if (a.out) a.out.value = buildAdminsOutput();
   }
 
-  // ============================================================
-  // INIT
-  // ============================================================
-  // start: ensure 1 player char exists
-  if (p.charsList && p.charsList.children.length === 0){
-    p.btnAddChar?.click();
-  }
+  if (p.charsList && p.charsList.children.length === 0) p.btnAddChar?.click();
   syncPlayersUI();
 
-  // start: ensure 1 admin char exists
-  if (a.charsList && a.charsList.children.length === 0){
-    a.btnAddChar?.click();
-  }
+  if (a.charsList && a.charsList.children.length === 0) a.btnAddChar?.click();
 
   syncAdminsUI();
   setMainTab("players");
   renderAll();
 })();
 
-
-
 (() => {
-  const app = document.querySelector('.app');
-  const buttons = Array.from(document.querySelectorAll('[data-set-theme]'));
+  const app = document.querySelector(".app");
+  const buttons = Array.from(document.querySelectorAll("[data-set-theme]"));
 
   const apply = (theme) => {
-    app.setAttribute('data-theme', theme);
-    buttons.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.setTheme === theme)));
-    try{ localStorage.setItem('theme', theme); }catch(e){}
+    app.setAttribute("data-theme", theme);
+    buttons.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.setTheme === theme)));
+    try {
+      localStorage.setItem("theme", theme);
+    } catch (e) {}
   };
 
-  const saved = (() => { try{ return localStorage.getItem('theme'); }catch(e){ return null; } })();
-  if(saved === 'light' || saved === 'dark') apply(saved);
+  const saved = (() => {
+    try {
+      return localStorage.getItem("theme");
+    } catch (e) {
+      return null;
+    }
+  })();
 
-  buttons.forEach(b => b.addEventListener('click', () => apply(b.dataset.setTheme)));
+  if (saved === "light" || saved === "dark") apply(saved);
+  buttons.forEach((b) => b.addEventListener("click", () => apply(b.dataset.setTheme)));
 })();
 </script>
 
