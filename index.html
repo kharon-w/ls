@@ -337,7 +337,7 @@ select option{background:var(--panel);color:var(--ink)}
         <section class="card hidden" id="cardAdminsOut">
           <h2>Результат для админов</h2>
           <textarea id="outAdmins" class="mono" style="min-height:720px" readonly></textarea>
-          <div class="hint">Проверяйте после публикации! Код изначального ЛС остается вверху до обновления страницы</div>
+          <div class="hint">Проверяйте после публикации! Код изначального ЛС остается вверху до обновления страницы / 07.03</div>
         </section>
       </aside>
     </div>
@@ -1187,6 +1187,52 @@ select option{background:var(--panel);color:var(--ink)}
 
   buildCouponsUI();
 
+  function parseCouponCount(text, base){
+  const raw = normalizeSpace(text || "");
+  const re = new RegExp(base.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\s*:\\s*(\\d+)", "i");
+  const m = raw.match(re);
+  return m ? Math.max(0, parseInt(m[1], 10) || 0) : 0;
+}
+
+function collectAllCouponTips(wrap){
+  return Array.from(wrap.querySelectorAll(".char-tip")).map((tip) => {
+    const img = tip.querySelector("img");
+    const span = tip.querySelector("span");
+    const txt = normalizeSpace(span?.textContent || "");
+    const base = couponNames.find((name) => txt.toUpperCase().startsWith(name.toUpperCase()));
+    return { tip, img, span, txt, base };
+  });
+}
+
+function findCouponTipByBase(wrap, base){
+  const items = collectAllCouponTips(wrap);
+  return items.find((x) => x.base === base) || null;
+}
+
+function syncCouponStateFromHTML(root){
+  const wrap = root.querySelector(".th3-block wrap");
+  if (!wrap) return;
+
+  couponNames.forEach((base) => {
+    const found = findCouponTipByBase(wrap, base);
+
+    if (!found){
+      couponState.set(base, { on:false, count:0 });
+      return;
+    }
+
+    const isOn = !found.img?.classList.contains("nema");
+    const count = parseCouponCount(found.txt, base);
+
+    couponState.set(base, {
+      on: isOn,
+      count: count
+    });
+  });
+
+  buildCouponsUI();
+}
+
   const DEFAULT_LS_BG = "https://upforme.ru/uploads/001c/a1/8d/26/641428.png";
   const DEFAULT_ICON = "https://forumavatars.ru/img/avatars/001c/a1/8d/2-1769246364.png";
   const DEFAULT_PROFILE_BG = "https://forumstatic.ru/files/001c/a3/e7/96810.jpg";
@@ -1378,6 +1424,7 @@ ${NEW_LS_STATIC_TAIL}
 
     exChars = getCharMetaFromDoc(doc);
     refreshExistingCharUI();
+    syncCouponStateFromHTML(root);
 
     // новые персонажи
     const addChars = collectExistAddChars();
@@ -1543,33 +1590,35 @@ ${parts.length ? "            " + parts.join("\n\n").replace(/\n/g, "\n         
     }
 
     // купоны
-    const couponWrap = root.querySelector(".th3-block wrap");
-    if (couponWrap) {
-      couponNames.forEach((base) => {
-        const st = couponState.get(base) || { on: false, count: 0 };
-        let found = findCouponTipByBase(couponWrap, base);
+const couponWrap = root.querySelector(".th3-block wrap");
+if (couponWrap){
+  couponNames.forEach((base) => {
+    const st = couponState.get(base) || { on:false, count:0 };
+    let found = findCouponTipByBase(couponWrap, base);
 
-        if (!found) {
-          const src = couponImgByName[base] || "https://forumstatic.ru/files/001c/a3/e7/92654.png";
-          const div = doc.createElement("div");
-          div.className = "char-tip";
-          div.setAttribute("data-gen", "1");
-          div.innerHTML = `<img class="nema" src="${esc(src)}"><span>${esc(base)}: 0 шт</span>`;
-          couponWrap.appendChild(doc.createTextNode("\n"));
-          couponWrap.appendChild(div);
-          found = findCouponTipByBase(couponWrap, base);
-        }
-
-        if (!found) return;
-
-        if (found.span) found.span.textContent = `${base}: ${st.on ? st.count : 0} шт`;
-
-        if (found.img) {
-          if (st.on) found.img.classList.remove("nema");
-          else found.img.classList.add("nema");
-        }
-      });
+    if (!found && st.on){
+      const src = couponImgByName[base] || "https://forumstatic.ru/files/001c/a3/e7/92654.png";
+      const div = doc.createElement("div");
+      div.className = "char-tip";
+      div.setAttribute("data-gen", "1");
+      div.innerHTML = `<img src="${esc(src)}"><span>${esc(base)}: ${st.count} шт</span>`;
+      couponWrap.appendChild(doc.createTextNode("\n"));
+      couponWrap.appendChild(div);
+      found = findCouponTipByBase(couponWrap, base);
     }
+
+    if (!found) return;
+
+    if (found.span){
+      found.span.textContent = `${base}: ${st.on ? st.count : 0} шт`;
+    }
+
+    if (found.img){
+      if (st.on) found.img.classList.remove("nema");
+      else found.img.classList.add("nema");
+    }
+  });
+}
 
     // ачивки
     const achWrap = root.querySelector(".th-block wrap");
