@@ -337,7 +337,7 @@ select option{background:var(--panel);color:var(--ink)}
         <section class="card hidden" id="cardAdminsOut">
           <h2>Результат для админов</h2>
           <textarea id="outAdmins" class="mono" style="min-height:720px" readonly></textarea>
-          <div class="hint">Проверяйте после публикации! Код изначального ЛС остается вверху до обновления страницы / 07.03</div>
+          <div class="hint">Проверяйте после публикации! Код изначального ЛС остается вверху до обновления страницы / 09.03</div>
         </section>
       </aside>
     </div>
@@ -1424,7 +1424,7 @@ ${NEW_LS_STATIC_TAIL}
 
     exChars = getCharMetaFromDoc(doc);
     refreshExistingCharUI();
-    syncCouponStateFromHTML(root);
+    
 
     // новые персонажи
     const addChars = collectExistAddChars();
@@ -1746,10 +1746,36 @@ if (couponWrap){
     renderAll();
   });
 
-  [a.existCode, a.exCharSelect, a.bgLSCurrent, a.plashDef1, a.plashDef2, a.epsMain, a.epsSNS, a.epsAlt].forEach((el) => {
-    on(el, "input", renderAll);
-    on(el, "change", renderAll);
-  });
+ [a.exCharSelect, a.bgLSCurrent, a.plashDef1, a.plashDef2, a.epsMain, a.epsSNS, a.epsAlt].forEach((el) => {
+  on(el, "input", renderAll);
+  on(el, "change", renderAll);
+});
+
+on(a.existCode, "input", () => {
+  const doc = parseHTML(val(a.existCode));
+  if (doc) {
+    exChars = getCharMetaFromDoc(doc);
+    refreshExistingCharUI();
+    syncCouponStateFromHTML(doc.body);
+  } else {
+    exChars = [];
+    refreshExistingCharUI();
+  }
+  renderAll();
+});
+
+on(a.existCode, "change", () => {
+  const doc = parseHTML(val(a.existCode));
+  if (doc) {
+    exChars = getCharMetaFromDoc(doc);
+    refreshExistingCharUI();
+    syncCouponStateFromHTML(doc.body);
+  } else {
+    exChars = [];
+    refreshExistingCharUI();
+  }
+  renderAll();
+});
 
   function buildAdminsOutput() {
     const m = aMode();
